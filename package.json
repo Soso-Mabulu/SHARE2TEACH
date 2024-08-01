@@ -1,0 +1,18 @@
+{
+  "name": "share2teach",
+  "version": "1.0.0",
+  "description": "Provide Education resources for free",
+  "main": "index.js",
+  "scripts": {
+    "devStart": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
