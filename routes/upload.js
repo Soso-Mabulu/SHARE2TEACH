@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { PutObjectCommand, GetObjectCommand, S3Client } = require('@aws-sdk/client-s3');
+const { PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const s3 = require('../config'); // Ensure correct path to config file
+const s3 = require('../config');
+const passport = require('passport');
 
 const bucketName = 'file-storage1';
 
@@ -20,15 +21,10 @@ const uploadFile = async (keyName, fileContent) => {
   };
 
   try {
-    // Use PutObjectCommand to upload file
     const putCommand = new PutObjectCommand(params);
     await s3.send(putCommand);
     
-    // Generate URL
-    const getCommand = new GetObjectCommand({
-      Bucket: bucketName,
-      Key: keyName
-    });
+    const getCommand = new GetObjectCommand({ Bucket: bucketName, Key: keyName });
     const fileUrl = await getSignedUrl(s3, getCommand, { expiresIn: 300 }); // URL valid for 5 minutes
     
     return fileUrl;
@@ -38,7 +34,7 @@ const uploadFile = async (keyName, fileContent) => {
 };
 
 // POST route to upload file
-router.post('/', upload.single('file'), async (req, res) => {
+router.post('/', passport.authenticate('jwt', { session: false }), upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
