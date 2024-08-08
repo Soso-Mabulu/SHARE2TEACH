@@ -31,7 +31,7 @@ This is the backend of the Share-2-Teach application, which is built using Expre
 
 The `.env` file is where you store your environment variables. Create a file in the root of your project called `.env` and add the following variables:
 
-    ```plaintext
+   ```plaintext
     PORT=3000
     AWS_ACCESS_KEY_ID=your_aws_access_key
     AWS_SECRET_ACCESS_KEY=your_aws_secret_key
@@ -39,7 +39,7 @@ The `.env` file is where you store your environment variables. Create a file in 
     S3_BUCKET_NAME=your_s3_bucket_name
     DATABASE_URL=your_database_url
     JWT_SECRET=your_jwt_secret
-
+   ```
 Replace the placeholders with your actual credentials and configurations.
 
 ### AWS S3 Configuration:
@@ -52,8 +52,9 @@ Ensure you have an S3 bucket set up on AWS and update the `AWS_REGION` and `S3_B
 
 To start the server, run:
 
-    ```bash
-    npm start
+ ```bash
+ npm start
+```
 The server will run on the port specified in the `.env` file (default is 3000).
 
 ## Access the API:
