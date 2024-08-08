@@ -1,0 +1,159 @@
+openapi: 3.0.0
+info:
+  title: Share-2-Teach API
+  description: This is the backend API for the Share-2-Teach application. It allows users to upload, share, and view documents.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /auth/signup:
+    post:
+      summary: Register a new user
+      description: Creates a new user account with the provided information.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userName:
+                  type: string
+                  example: "lee"
+                userLName:
+                  type: string
+                  example: "Doe"
+                email:
+                  type: string
+                  example: "lee.k@example.com"
+                password:
+                  type: string
+                  example: "password1234"
+              required:
+                - userName
+                - userLName
+                - email
+                - password
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+        '400':
+          description: Bad request, invalid data
+        '409':
+          description: Conflict, email already exists
+
+  /auth/signin:
+    post:
+      summary: Sign in a user
+      description: Authenticates a user and returns a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "john.doe@example.com"
+                password:
+                  type: string
+                  example: "password123"
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: User authenticated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  message:
+                    type: string
+                    example: "User signed in successfully"
+        '401':
+          description: Unauthorized, invalid credentials
+
+  /users:
+    get:
+      summary: Get list of users
+      description: Retrieves a list of all registered users.
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userId:
+                      type: string
+                      example: "12345"
+                    userName:
+                      type: string
+                      example: "lee"
+                    userLName:
+                      type: string
+                      example: "Doe"
+                    email:
+                      type: string
+                      example: "lee.k@example.com"
+    post:
+      summary: Update User Role (Admin Only)
+      description: Updates the role of a user to Moderator or admin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userName:
+                  type: string
+                  example: "newuser"
+                userLName:
+                  type: string
+                  example: "User"
+                email:
+                  type: string
+                  example: "newuser@example.com"
+                password:
+                  type: string
+                  example: "password1234"
+              required:
+                - userName
+                - userLName
+                - email
+                - password
+      responses:
+        '201':
+          description: User added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User added successfully"
+        '400':
+          description: Bad request, invalid data
+        '409':
+          description: Conflict, email already exists

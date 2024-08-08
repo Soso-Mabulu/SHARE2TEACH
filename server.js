@@ -4,6 +4,10 @@ const bodyParser = require('body-parser');
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protected');
 
+// Swagger setup
+const setupSwagger = require('./routes/swagger');
+setupSwagger(app);
+
 app.use(bodyParser.json());
 app.use('/auth', authRoutes);
 app.use('/protected', protectedRoutes);
