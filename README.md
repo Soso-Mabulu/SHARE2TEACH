@@ -16,7 +16,7 @@ This is the backend of the Share-2-Teach application, which is built using Expre
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/yourusername/share-2-teach-backend.git
+   git clone https://github.com/Soso-Mabulu/SHARE2TEACH.git
    cd share-2-teach-backend
 2. ** Install Dependencies:**
 
