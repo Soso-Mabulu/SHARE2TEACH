@@ -88,14 +88,15 @@ paths:
                     example: "User signed in successfully"
         '401':
           description: Unauthorized, invalid credentials
-
   /users:
     get:
-      summary: Get list of users
-      description: Retrieves a list of all registered users.
+      summary: Retrieve a list of all users
+      description: Fetches all registered users. Requires admin role.
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: List of users
+          description: A list of users
           content:
             application/json:
               schema:
@@ -103,57 +104,25 @@ paths:
                 items:
                   type: object
                   properties:
-                    userId:
+                    id:
+                      type: integer
+                      description: User ID
+                    username:
                       type: string
-                      example: "12345"
-                    userName:
-                      type: string
-                      example: "lee"
-                    userLName:
-                      type: string
-                      example: "Doe"
+                      description: Username
                     email:
                       type: string
-                      example: "lee.k@example.com"
-    post:
-      summary: Update User Role (Admin Only)
-      description: Updates the role of a user to Moderator or admin.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userName:
-                  type: string
-                  example: "newuser"
-                userLName:
-                  type: string
-                  example: "User"
-                email:
-                  type: string
-                  example: "newuser@example.com"
-                password:
-                  type: string
-                  example: "password1234"
-              required:
-                - userName
-                - userLName
-                - email
-                - password
-      responses:
-        '201':
-          description: User added successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "User added successfully"
-        '400':
-          description: Bad request, invalid data
-        '409':
-          description: Conflict, email already exists
+                      description: User email
+                    role:
+                      type: string
+                      description: User role
+        '401':
+          description: Unauthorized, no or invalid token
+        '403':
+          description: Forbidden, insufficient privileges
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

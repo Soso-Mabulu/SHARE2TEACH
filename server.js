@@ -3,6 +3,10 @@ const app = express();
 const bodyParser = require('body-parser');
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protected');
+const usersRoutes = require('./routes/users');
+
+// Use the users route
+app.use('/users', usersRoutes);
 
 // Swagger setup
 const setupSwagger = require('./routes/swagger');
