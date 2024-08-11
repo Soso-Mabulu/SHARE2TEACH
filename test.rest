@@ -1,3 +1,4 @@
+### Sign Up Request
 POST http://localhost:3000/auth/signup
 Content-Type: application/json
 
@@ -6,11 +7,11 @@ Content-Type: application/json
   "userLName": "Doe",
   "email": "mxolisi@gmail.com",
   "password": "password1234"
-
 }
 
 ###
 
+### Sign In Request
 POST http://localhost:3000/auth/signin
 Content-Type: application/json
 
@@ -18,3 +19,12 @@ Content-Type: application/json
   "email": "john.doe@example.com",
   "password": "password123"
 }
+
+###
+
+### Test File Upload Route (Replace with your actual JWT token)
+POST http://localhost:3000/upload
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzIzMzc5NzczLCJleHAiOjE3MjMzODMzNzN9.dUf9ymWv6QCoT1PJpQt4ceK2o1ekhtr-iUotXzFnFfA
+Content-Type: multipart/form-data
+
+file=@C:/Users/hp/Downloads/cmpg322-test2-2024-2024-cmpg322-test-2.pdf

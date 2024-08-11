@@ -1,9 +1,11 @@
+// routes/upload.js
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const s3 = require('../config');
+const s3 = require('../config'); // Ensure you have your AWS SDK configuration here
 const passport = require('passport');
 
 const bucketName = 'file-storage1';
