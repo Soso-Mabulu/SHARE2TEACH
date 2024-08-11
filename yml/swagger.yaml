@@ -11,6 +11,8 @@ paths:
   /auth/signup:
     post:
       summary: Register a new user
+      tags:
+        - Authentication
       description: Creates a new user account with the provided information.
       requestBody:
         required: true
@@ -55,6 +57,8 @@ paths:
   /auth/signin:
     post:
       summary: Sign in a user
+      tags:
+        - Authentication
       description: Authenticates a user and returns a JWT token.
       requestBody:
         required: true
@@ -88,9 +92,12 @@ paths:
                     example: "User signed in successfully"
         '401':
           description: Unauthorized, invalid credentials
+
   /users:
     get:
       summary: Retrieve a list of all users
+      tags:
+        - Users
       description: Fetches all registered users. Requires admin role.
       security:
         - bearerAuth: []
@@ -120,6 +127,43 @@ paths:
           description: Unauthorized, no or invalid token
         '403':
           description: Forbidden, insufficient privileges
+
+  /users/{userId}:
+    put:
+      summary: Update user type
+      tags:
+        - Users
+      description: Updates the user type (role) of a specific user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            example: "12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userType:
+                  type: string
+                  enum: [moderator, admin, public]
+                  example: "moderator"
+      responses:
+        '200':
+          description: User type updated successfully
+        '400':
+          description: Invalid userId or userType provided
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+
 components:
   securitySchemes:
     bearerAuth:

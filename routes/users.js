@@ -17,4 +17,29 @@ router.get('/', (req, res) => {
     });
 });
 
+// PUT /users/:userId - Update a user's type
+router.put('/:userId', (req, res) => {
+    const { userId } = req.params;
+    const { userType } = req.body;
+
+    // Validate userType
+    const validUserTypes = ['moderator', 'admin', 'public'];
+    if (!validUserTypes.includes(userType)) {
+        return res.status(400).json({ message: 'Invalid user type provided' });
+    }
+
+    db.query('UPDATE User SET userType = ? WHERE userId = ?', [userType, userId], (err, results) => {
+        if (err) {
+            console.error('Error updating user type:', err);
+            return res.status(500).json({ message: 'Internal Server Error' });
+        }
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ message: 'User type updated successfully' });
+    });
+});
+
 module.exports = router;
