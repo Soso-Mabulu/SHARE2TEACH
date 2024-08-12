@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protected');
 const usersRoutes = require('./routes/users');
+const uploadRoutes = require("./routes/uploadRoutes");
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
@@ -12,6 +13,7 @@ app.use(bodyParser.json());
 app.use('/auth', authRoutes);
 app.use('/protected', protectedRoutes);
 app.use('/users', usersRoutes);  // Use the users route
+app.use("/upload", uploadRoutes);
 
 // Swagger setup
 const setupSwagger = require('./routes/swagger');
