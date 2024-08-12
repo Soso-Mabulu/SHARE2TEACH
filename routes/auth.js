@@ -61,12 +61,14 @@ router.get('/google/callback',
               db.query('INSERT INTO User (userName, userLName, email) VALUES (?, ?, ?)', [firstName, lastName, email], (err, results) => {
                   if (err) return res.status(500).json({ error: err.message });
                   
-                  // Optionally include a success message or token here
-                  return res.redirect('/auth/success');
+                  const token = generateToken(user);
+                  
+                  return res.json({ token });
               });
           } else {
+              const token = generateToken(user);
               // If user exists, proceed to success
-              return res.redirect('/auth/success');
+              return res.json({ token });
           }
       });
   });
