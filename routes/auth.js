@@ -1,15 +1,13 @@
-// routes/auth.js
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const generateToken = require('../utils/jwt');
-const db = require('../config/db'); // Import your MySQL config
+const db = require('../config/db');
 const router = express.Router();
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth2').Strategy;
 
 // Sign Up Route
 router.post('/signup', async (req, res) => {
-  const { userName, userLName, email, password} = req.body;
+  const { userName, userLName, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = 'INSERT INTO User (userName, userLName, email, userPassword) VALUES (?, ?, ?, ?)';
@@ -45,12 +43,34 @@ router.post('/signin', async (req, res) => {
 router.get('/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
 
 // Google OAuth callback route
-router.get('/callback', 
-    passport.authenticate('google', {
-        successRedirect: '/auth/success',
-        failureRedirect: '/auth/failure'
-    })
-);
+router.get('/google/callback',
+  passport.authenticate('google', { session: false }), async (req, res) => {
+      if (!req.user) {
+          return res.redirect('/auth/failure');
+      }
+
+      const { email, displayName } = req.user;
+      const [firstName, lastName] = displayName ? displayName.split(' ') : ['Unknown', 'User'];
+
+      // Check if the user already exists in the database
+      db.query('SELECT * FROM User WHERE email = ?', [email], (err, results) => {
+          if (err) return res.status(500).json({ error: err.message });
+
+          if (results.length === 0) {
+              // If user doesn't exist, create a new user
+              db.query('INSERT INTO User (userName, userLName, email) VALUES (?, ?, ?)', [firstName, lastName, email], (err, results) => {
+                  if (err) return res.status(500).json({ error: err.message });
+                  
+                  // Optionally include a success message or token here
+                  return res.redirect('/auth/success');
+              });
+          } else {
+              // If user exists, proceed to success
+              return res.redirect('/auth/success');
+          }
+      });
+  });
+
 
 // Success route
 router.get('/success', (req, res) => {
