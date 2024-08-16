@@ -2,40 +2,53 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const generateToken = require('../utils/jwt');
-const db = require('../config/db'); // Import your MySQL config
+const connectToDatabase = require('../config/db'); // Import MySQL config
 const router = express.Router();
 
 // Sign Up Route
 router.post('/signup', async (req, res) => {
-  const { userName, userLName, email, password} = req.body;
+  const { userName, userLName, email, password } = req.body;
+  let db;
+
   try {
+    db = await connectToDatabase(); // Get the database connection
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = 'INSERT INTO User (userName, userLName, email, userPassword) VALUES (?, ?, ?, ?)';
-    db.query(query, [userName, userLName, email, hashedPassword], (err, results) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json({ message: 'User created', userId: results.insertId });
-    });
+    const [results] = await db.query(query, [userName, userLName, email, hashedPassword]);
+
+    res.status(201).json({ message: 'User created', userId: results.insertId });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  } finally {
+    if (db) await db.end(); // Close the connection
   }
 });
 
 // Sign In Route
 router.post('/signin', async (req, res) => {
   const { email, password } = req.body;
+  let db;
+
   try {
+    db = await connectToDatabase(); // Get the database connection
+
     const query = 'SELECT * FROM User WHERE email = ?';
-    db.query(query, [email], async (err, results) => {
-      if (err) return res.status(500).json({ error: err.message });
-      const user = results[0];
-      if (!user || !(await bcrypt.compare(password, user.userPassword))) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-      const token = generateToken(user);
-      res.json({ token });
-    });
+    const [results] = await db.query(query, [email]);
+
+    const user = results[0];
+    if (!user || !(await bcrypt.compare(password, user.userPassword))) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = generateToken(user);
+    res.json({ token });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error:', err);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  } finally {
+    if (db) await db.end(); // Close the connection
   }
 });
 

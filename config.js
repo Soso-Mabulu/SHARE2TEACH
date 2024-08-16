@@ -1,23 +1,13 @@
-const { S3Client } = require('@aws-sdk/client-s3');
+const { BlobServiceClient } = require('@azure/storage-blob');
 require('dotenv').config();
 
-console.log('AWS Region:', process.env.AWS_REGION);
-console.log('AWS Access Key ID:', process.env.AWS_ACCESS_KEY_ID ? 'Loaded' : 'Not Loaded');
-console.log('AWS Secret Access Key:', process.env.AWS_SECRET_ACCESS_KEY ? 'Loaded' : 'Not Loaded');
+console.log('Azure Storage Account Name:', process.env.AZURE_STORAGE_ACCOUNT_NAME);
+console.log('Azure Storage Account Key:', process.env.AZURE_STORAGE_ACCOUNT_KEY ? 'Loaded' : 'Not Loaded');
 
-// S3 Client Configuration
-const s3 = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    }
-});
+// Azure Blob Storage Client Configuration
+const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
 
-// Cognito Configuration
-const cognito = {
-    UserPoolId: process.env.COGNITO_USER_POOL_ID,
-    ClientId: process.env.COGNITO_CLIENT_ID
-};
+// Replace with your container name
+const containerClient = blobServiceClient.getContainerClient(process.env.AZURE_CONTAINER_NAME);
 
-module.exports = { s3, cognito };
+module.exports = { blobServiceClient, containerClient };

@@ -23,16 +23,20 @@ paths:
               properties:
                 userName:
                   type: string
-                  example: "lee"
+                  description: The user's first name.
+                  example: "John"
                 userLName:
                   type: string
+                  description: The user's last name.
                   example: "Doe"
                 email:
                   type: string
-                  example: "lee.k@example.com"
+                  description: The user's email address.
+                  example: "john.doe@example.com"
                 password:
                   type: string
-                  example: "password1234"
+                  description: The user's password.
+                  example: "password123"
               required:
                 - userName
                 - userLName
@@ -69,9 +73,11 @@ paths:
               properties:
                 email:
                   type: string
+                  description: The user's email address.
                   example: "john.doe@example.com"
                 password:
                   type: string
+                  description: The user's password.
                   example: "password123"
               required:
                 - email
@@ -86,6 +92,7 @@ paths:
                 properties:
                   token:
                     type: string
+                    description: The JWT token for authentication.
                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   message:
                     type: string
@@ -123,6 +130,11 @@ paths:
                     role:
                       type: string
                       description: User role
+                  example:
+                    - id: 1
+                      username: "John"
+                      email: "john.doe@example.com"
+                      role: "admin"
         '401':
           description: Unauthorized, no or invalid token
         '403':
@@ -154,6 +166,7 @@ paths:
                   type: string
                   enum: [moderator, admin, public]
                   example: "moderator"
+                  description: The new role for the user.
       responses:
         '200':
           description: User type updated successfully
@@ -163,6 +176,73 @@ paths:
           description: User not found
         '500':
           description: Internal server error
+
+  /upload:
+    post:
+      summary: Upload a document
+      tags:
+        - Documents
+      description: Allows educators, moderators, and admins to upload documents. The file is uploaded to Azure Blob Storage, and the metadata is stored in the database. User ID is extracted from the JWT.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: The files to upload. Only PDF files are allowed.
+                module:
+                  type: string
+                  description: The module associated with the document.
+                  example: "CMPG321"
+                description:
+                  type: string
+                  description: A brief description of the document.
+                  example: "Lecture notes on cloud computing."
+                university:
+                  type: string
+                  description: The university associated with the document.
+                  example: "Example University"
+                category:
+                  type: string
+                  description: The category of the document.
+                  example: "Lecture Notes"
+                academicYear:
+                  type: string
+                  description: The academic year for the document.
+                  example: "2023"
+      responses:
+        '200':
+          description: Document uploaded successfully and marked as pending.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                          example: "https://share2teach.blob.core.windows.net/documents/lecture_notes.pdf"
+        '400':
+          description: Bad request, no files uploaded or invalid data.
+        '403':
+          description: Forbidden, insufficient privileges.
+        '500':
+          description: Internal server error.
 
 components:
   securitySchemes:

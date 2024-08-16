@@ -11,7 +11,11 @@ router.get('/moderator', authorize('moderator'), (req, res) => {
   res.send('Welcome, moderator!');
 });
 
-router.get('/user', authorize(['admin', 'moderator', 'public access user']), (req, res) => {
+router.get('/educator', authorize('educator'), (req, res) => {
+  res.send('Welcome, educator!');
+});
+
+router.get('/user', authorize(['admin', 'moderator', 'educator', 'public access user']), (req, res) => {
   res.send('Welcome, user!');
 });
 
