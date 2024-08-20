@@ -4,6 +4,7 @@ const generateToken = require('../utils/jwt');
 const db = require('../config/db');
 const router = express.Router();
 const passport = require('passport');
+require('./protected'); // Load Passport configuration
 
 // Sign Up Route
 router.post('/signup', async (req, res) => {
@@ -61,25 +62,25 @@ router.get('/google/callback',
               db.query('INSERT INTO User (userName, userLName, email) VALUES (?, ?, ?)', [firstName, lastName, email], (err, results) => {
                   if (err) return res.status(500).json({ error: err.message });
                   
-                  const token = generateToken(user);
+                  // Create a token for the new user
+                  const token = generateToken({ email, displayName }); // Use relevant user info for token
                   
                   return res.json({ token });
               });
           } else {
-              const token = generateToken(user);
-              // If user exists, proceed to success
+              // User exists, generate a token for existing user
+              const token = generateToken(results[0]);
               return res.json({ token });
           }
       });
   });
-
 
 // Success route
 router.get('/success', (req, res) => {
     if (!req.user) {
         return res.redirect('/auth/failure');
     }
-    res.send(`Welcome ${req.user.emails[0].value}`);
+    res.send(`Welcome ${req.user.displayName}`);
 });
 
 // Failure route
