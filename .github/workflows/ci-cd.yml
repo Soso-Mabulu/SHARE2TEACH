@@ -32,7 +32,7 @@ jobs:
         run: npm test
 
       - name: Build Docker image
-        run: docker build -t sosokwani/share2teach-backend:latest ./docker
+        run: docker build -t your-dockerhub-username/share2teach-backend:latest -f docker/Dockerfile .
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
