@@ -1,0 +1,46 @@
+POST http://localhost:3000/auth/signup
+Content-Type: application/json
+
+{
+  "userName": "lee2",
+  "userLName": "Doe",
+  "email": "mxolisi@gmail.com",
+  "password": "password1234"
+
+}
+
+###
+
+POST http://localhost:3000/auth/signin
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+
+
+### Get All Users
+GET http://localhost:3000/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzIzMTkxMjMyLCJleHAiOjE3MjMxOTQ4MzJ9.5hiiG5hXMImkxao2oTgXnloOY8tpOviq8hCbsBXRpDQ
+Accept: application/json
+
+### Example Response
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+[
+    {
+        "userId": 1,
+        "userName": "John Doe",
+        "userEmail": "john.doe@example.com",
+        "userRole": "admin"
+    },
+    {
+        "userId": 2,
+        "userName": "Jane Smith",
+        "userEmail": "jane.smith@example.com",
+        "userRole": "user"
+    }
+]

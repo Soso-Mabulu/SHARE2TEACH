@@ -1,0 +1,252 @@
+openapi: 3.0.0
+info:
+  title: Share-2-Teach API
+  description: This is the backend API for the Share-2-Teach application. It allows users to upload, share, and view documents.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /api/v1/auth/signup:
+    post:
+      summary: Register a new user
+      tags:
+        - Authentication
+      description: Creates a new user account with the provided information.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userName:
+                  type: string
+                  description: The user's first name.
+                  example: "John"
+                userLName:
+                  type: string
+                  description: The user's last name.
+                  example: "Doe"
+                email:
+                  type: string
+                  description: The user's email address.
+                  example: "john.doe@example.com"
+                password:
+                  type: string
+                  description: The user's password.
+                  example: "password123"
+              required:
+                - userName
+                - userLName
+                - email
+                - password
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+        '400':
+          description: Bad request, invalid data
+        '409':
+          description: Conflict, email already exists
+
+  /api/v1/auth/signin:
+    post:
+      summary: Sign in a user
+      tags:
+        - Authentication
+      description: Authenticates a user and returns a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: The user's email address.
+                  example: "john.doe@example.com"
+                password:
+                  type: string
+                  description: The user's password.
+                  example: "password123"
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: User authenticated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: The JWT token for authentication.
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  message:
+                    type: string
+                    example: "User signed in successfully"
+        '401':
+          description: Unauthorized, invalid credentials
+
+  /api/v1/users:
+    get:
+      summary: Retrieve a list of all users
+      tags:
+        - Users
+      description: Fetches all registered users. Requires admin role.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      description: User ID
+                    username:
+                      type: string
+                      description: Username
+                    email:
+                      type: string
+                      description: User email
+                    role:
+                      type: string
+                      description: User role
+                  example:
+                    - id: 1
+                      username: "John"
+                      email: "john.doe@example.com"
+                      role: "admin"
+        '401':
+          description: Unauthorized, no or invalid token
+        '403':
+          description: Forbidden, insufficient privileges
+
+  /api/v1/users/{userId}:
+    put:
+      summary: Update user type
+      tags:
+        - Users
+      description: Updates the user type (role) of a specific user.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            example: "12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userType:
+                  type: string
+                  enum: [moderator, admin, public]
+                  example: "moderator"
+                  description: The new role for the user.
+      responses:
+        '200':
+          description: User type updated successfully
+        '400':
+          description: Invalid userId or userType provided
+        '404':
+          description: User not found
+        '500':
+          description: Internal server error
+
+  /api/v1/upload:
+    post:
+      summary: Upload a document
+      tags:
+        - Documents
+      description: Allows educators, moderators, and admins to upload documents. The file is uploaded to Azure Blob Storage, and the metadata is stored in the database. User ID is extracted from the JWT.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: The files to upload. Only PDF files are allowed.
+                module:
+                  type: string
+                  description: The module associated with the document.
+                  example: "CMPG321"
+                description:
+                  type: string
+                  description: A brief description of the document.
+                  example: "Lecture notes on cloud computing."
+                university:
+                  type: string
+                  description: The university associated with the document.
+                  example: "Example University"
+                category:
+                  type: string
+                  description: The category of the document.
+                  example: "Lecture Notes"
+                academicYear:
+                  type: string
+                  description: The academic year for the document.
+                  example: "2023"
+      responses:
+        '200':
+          description: Document uploaded successfully and marked as pending.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                          example: "https://share2teach.blob.core.windows.net/documents/lecture_notes.pdf"
+        '400':
+          description: Bad request, no files uploaded or invalid data.
+        '403':
+          description: Forbidden, insufficient privileges.
+        '500':
+          description: Internal server error.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

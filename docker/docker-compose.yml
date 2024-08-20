@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - .:/app  # Mount the current directory to /app in the container
+    networks:
+      - share2teach-network
+
+networks:
+  share2teach-network:
+    driver: bridge

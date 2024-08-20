@@ -4,52 +4,31 @@ on:
   push:
     branches:
       - developer
-  pull_request:
-    branches:
-      - developer
       - main
-  workflow_dispatch:  # Allows manual triggers for production
-    inputs:
-      environment:
-        description: 'Which environment do you want to deploy to?'
-        required: true
-        default: 'developer'
-        type: choice
-        options:
-          - developer
-          - production
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Run tests
-      run: npm test
+      - name: Lint and test
+        run: npm run lint && npm test
 
-    - name: Build Docker image
-      run: |
-        docker build -t your-dockerhub-username/your-app-name:${{ github.sha }} .
-        echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-        docker push your-dockerhub-username/your-app-name:${{ github.sha }}
+      - name: Build Docker image
+        run: docker build -t sosokwani/share2teach-backend:latest .
 
-    - name: Deploy to Kubernetes (Developer)
-      if: github.ref == 'refs/heads/developer' || github.event.inputs.environment == 'developer'
-      run: |
-        kubectl set image deployment/your-deployment-name your-container-name=your-dockerhub-username/your-app-name:${{ github.sha }} --record
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Deploy to Kubernetes (Production)
-      if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
-      run: |
-        kubectl set image deployment/your-deployment-name your-container-name=your-dockerhub-username/your-app-name:${{ github.sha }} --record
+      - name: Push Docker image to Docker Hub
+        run: docker push sosokwani/share2teach-backend:latest

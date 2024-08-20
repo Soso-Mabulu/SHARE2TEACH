@@ -1,0 +1,57 @@
+trigger:
+  branches:
+    include:
+      - main
+      - dev
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Build
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '20.x'
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm install
+              npm run build
+            displayName: 'Build Application'
+
+          - script: docker build -t share2teach-backend:$(Build.BuildId) .
+            displayName: 'Build Docker Image'
+
+          - script: docker tag share2teach-backend:$(Build.BuildId) your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+            displayName: 'Tag Docker Image'
+
+          - script: docker push your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+            displayName: 'Push Docker Image'
+
+  - stage: Deploy_Development
+    jobs:
+      - deployment: DeployDev
+        environment: 'Development'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: docker pull your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+                  displayName: 'Pull Docker Image'
+                - script: docker run -d -p 3000:3000 your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+                  displayName: 'Run Docker Container'
+
+  - stage: Deploy_Production
+    jobs:
+      - deployment: DeployProd
+        environment: 'Production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: docker pull your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+                  displayName: 'Pull Docker Image'
+                - script: docker run -d -p 3000:3000 your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+                  displayName: 'Run Docker Container'
