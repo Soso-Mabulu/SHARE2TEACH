@@ -10,7 +10,7 @@ const uploadRoutes = require("./routes/uploadRoutes");
 app.use(bodyParser.json());
 
 // Versioning
-const apiVersion = 'v1';
+const apiVersion = 'v2';
 
 // Route handlers with versioning
 app.use(`/api/${apiVersion}/auth`, authRoutes);
