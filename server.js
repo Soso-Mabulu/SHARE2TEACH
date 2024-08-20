@@ -9,11 +9,14 @@ const uploadRoutes = require("./routes/uploadRoutes");
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
 
-// Route handlers
-app.use('/auth', authRoutes);
-app.use('/protected', protectedRoutes);
-app.use('/users', usersRoutes);  // Use the users route
-app.use("/upload", uploadRoutes);
+// Versioning
+const apiVersion = 'v1';
+
+// Route handlers with versioning
+app.use(`/api/${apiVersion}/auth`, authRoutes);
+app.use(`/api/${apiVersion}/protected`, protectedRoutes);
+app.use(`/api/${apiVersion}/users`, usersRoutes);
+app.use(`/api/${apiVersion}/upload`, uploadRoutes);
 
 // Swagger setup
 const setupSwagger = require('./routes/swagger');
@@ -22,6 +25,5 @@ setupSwagger(app);
 // Start the server
 app.listen(process.env.PORT || 3000, () => {
   console.log(`Server is running on port ${process.env.PORT || 3000}`);
-  // Vist the Swagger UI at http://localhost:3000/docs
-  console.log('Swagger UI is available at http://localhost:3000/api-docs');
+  console.log(`Swagger UI is available at http://localhost:${process.env.PORT || 3000}/api-docs`);
 });

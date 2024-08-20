@@ -1,4 +1,4 @@
-const { s3Upload } = require("../utils/azureblob");
+const { s3Upload } = require("../utils/azureBlob");
 const connectToDatabase = require("../config/db");
 const jwt = require('jsonwebtoken');
 
