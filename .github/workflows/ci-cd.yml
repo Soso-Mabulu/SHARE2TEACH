@@ -4,6 +4,20 @@ on:
   push:
     branches:
       - developer
+  pull_request:
+    branches:
+      - developer
+      - main
+  workflow_dispatch:  # Allows manual triggers for production
+    inputs:
+      environment:
+        description: 'Which environment do you want to deploy to?'
+        required: true
+        default: 'developer'
+        type: choice
+        options:
+          - developer
+          - production
 
 jobs:
   build:
@@ -26,6 +40,16 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t sosokwani/Share2teach-Backend:${{ github.sha }} .
+        docker build -t your-dockerhub-username/your-app-name:${{ github.sha }} .
         echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-        docker push sosokwani/Share2teach-Backend:${{ github.sha }}
+        docker push your-dockerhub-username/your-app-name:${{ github.sha }}
+
+    - name: Deploy to Kubernetes (Developer)
+      if: github.ref == 'refs/heads/developer' || github.event.inputs.environment == 'developer'
+      run: |
+        kubectl set image deployment/your-deployment-name your-container-name=your-dockerhub-username/your-app-name:${{ github.sha }} --record
+
+    - name: Deploy to Kubernetes (Production)
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+      run: |
+        kubectl set image deployment/your-deployment-name your-container-name=your-dockerhub-username/your-app-name:${{ github.sha }} --record
