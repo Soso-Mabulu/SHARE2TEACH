@@ -1,4 +1,4 @@
-// routes/auth.js
+// routes/auth.js is a file that contains the routes for the authentication endpoints. It is imported in server.js and mounted at /api/v2/auth. The file contains two routes: one for signing up and one for signing in. The sign-up route inserts a new user into the database, while the sign-in route checks the user's credentials and generates a JWT token if they are valid.
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const generateToken = require('../utils/jwt');
