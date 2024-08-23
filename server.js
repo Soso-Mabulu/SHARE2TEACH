@@ -12,7 +12,7 @@ const app = express();
 app.use(bodyParser.json());
 
 // Versioning
-const apiVersion = 'v2';
+const apiVersion = 'v1';
 
 // Route handlers with versioning
 app.use(`/api/${apiVersion}/auth`, authRoutes);

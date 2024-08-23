@@ -5,14 +5,14 @@ describe('Sign-In Endpoint Tests', () => {
 
   // Mock admin user credentials
   const adminCredentials = {
-    email: 'john.doe@example.com', // Replace with actual admin email
-    password: 'password123'        // Replace with actual admin password
+    email: 'john.doe@example.com', // actual admin email
+    password: 'password123'        // actual admin password
   };
 
   // Test the POST /api/v2/auth/signin endpoint
   it('should return a token when valid credentials are provided', async () => {
     const response = await request(app)
-      .post('/api/v2/auth/signin') // Ensure this route is correct
+      .post('/api/v1/auth/signin') // Ensure this route is correct
       .send(adminCredentials);
 
     expect(response.statusCode).toBe(200);
@@ -27,7 +27,7 @@ describe('Sign-In Endpoint Tests', () => {
     };
 
     const response = await request(app)
-      .post('/api/v2/auth/signin') // Ensure this route is correct
+      .post('/api/v1/auth/signin') // Ensure this route is correct
       .send(invalidCredentials);
 
     expect(response.statusCode).toBe(401);
