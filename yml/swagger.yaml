@@ -244,6 +244,40 @@ paths:
         '500':
           description: Internal server error.
 
+  /api/v1/search:
+    get:
+      summary: Search for documents
+      tags:
+        - Documents
+      parameters:
+        - in: query
+          name: module
+          schema:
+            type: string
+        - in: query
+          name: description
+          schema:
+            type: string
+        - in: query
+          name: university
+          schema:
+            type: string
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: academicYear
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of documents matching the search criteria.
+        '400':
+          description: Invalid query parameters provided.
+        '500':
+          description: Internal server error.
+
 components:
   securitySchemes:
     bearerAuth:
