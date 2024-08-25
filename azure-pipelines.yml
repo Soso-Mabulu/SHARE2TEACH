@@ -37,28 +37,4 @@ stages:
           - script: docker push sosokwani/share2teach-backend:$(Build.BuildId)
             displayName: 'Push Docker Image'
 
-  - stage: Deploy_Development
-    jobs:
-      - deployment: DeployDev
-        environment: 'Development'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: docker pull sosokwani/share2teach-backend:$(Build.BuildId)
-                  displayName: 'Pull Docker Image'
-                - script: docker run -d -p 3000:3000 sosokwani/share2teach-backend:$(Build.BuildId)
-                  displayName: 'Run Docker Container'
-
-  - stage: Deploy_Production
-    jobs:
-      - deployment: DeployProd
-        environment: 'Production'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - script: docker pull sosokwani/share2teach-backend:$(Build.BuildId)
-                  displayName: 'Pull Docker Image'
-                - script: docker run -d -p 3000:3000 sosokwani/share2teach-backend:$(Build.BuildId)
-                  displayName: 'Run Docker Container'
+  
