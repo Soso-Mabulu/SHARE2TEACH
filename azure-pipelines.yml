@@ -12,18 +12,53 @@ variables:
   tag: '$(Build.BuildId)'
 
 stages:
-- stage: Build
-  displayName: Build image
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: Docker@2
-      displayName: Build an image
-      inputs:
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/docker/Dockerfile'
-        tags: |
-          $(tag)
+  - stage: Build
+    jobs:
+      - job: Build
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '20.x'
+            displayName: 'Install Node.js'
+
+          - script: |
+              npm install
+              npm run build
+            displayName: 'Build Application'
+
+          - script: docker build -t share2teach-backend:$(Build.BuildId) .
+            displayName: 'Build Docker Image'
+
+          - script: docker tag share2teach-backend:$(Build.BuildId) sosokwani/share2teach-backend:$(Build.BuildId)
+            displayName: 'Tag Docker Image'
+
+          - script: docker push sosokwani/share2teach-backend:$(Build.BuildId)
+            displayName: 'Push Docker Image'
+
+  - stage: Deploy_Development
+    jobs:
+      - deployment: DeployDev
+        environment: 'Development'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: docker pull sosokwani/share2teach-backend:$(Build.BuildId)
+                  displayName: 'Pull Docker Image'
+                - script: docker run -d -p 3000:3000 sosokwani/share2teach-backend:$(Build.BuildId)
+                  displayName: 'Run Docker Container'
+
+  - stage: Deploy_Production
+    jobs:
+      - deployment: DeployProd
+        environment: 'Production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: docker pull sosokwani/share2teach-backend:$(Build.BuildId)
+                  displayName: 'Pull Docker Image'
+                - script: docker run -d -p 3000:3000 sosokwani/share2teach-backend:$(Build.BuildId)
+                  displayName: 'Run Docker Container'
