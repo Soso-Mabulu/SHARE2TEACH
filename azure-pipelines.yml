@@ -1,21 +1,14 @@
-# Docker
-# Build and Deploy a Docker image to Azure Web App for Containers
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
 trigger:
 - main
 
-resources:
-- repo: self
-
 variables:
-  tag: '$(Build.BuildId)'
-  imageName: 'share2teach-backend'
+  dockerImageName: 'sosokwani/share2teach-backend'
+  dockerImageTag: 'latest'
 
 stages:
   - stage: Build
     jobs:
-      - job: Build
+      - job: BuildDockerImage
         pool:
           vmImage: 'ubuntu-latest'
         steps:
@@ -29,11 +22,44 @@ stages:
               npm run build
             displayName: 'Build Application'
 
-          - script: docker build -t $(imageName):$(tag) .
+          - script: docker build -t $(dockerImageName):$(dockerImageTag) .
             displayName: 'Build Docker Image'
 
-          - script: docker tag $(imageName):$(tag) $(ACR_NAME).azurecr.io/$(imageName):$(tag)
-            displayName: 'Tag Docker Image for ACR'
+          - task: Docker@2
+            inputs:
+              command: 'login'
+              containerRegistry: 'DockerHub' # Ensure this matches the Docker Hub service connection name
+              username: '$(DOCKER_USERNAME)'
+              password: '$(DOCKER_PASSWORD)'
+            displayName: 'Login to Docker Hub'
 
-          - script: docker push $(ACR_NAME).azurecr.io/$(imageName):$(tag)
-            displayName: 'Push Docker Image to ACR'
+          - task: Docker@2
+            inputs:
+              command: 'tag'
+              containerRegistry: 'DockerHub'
+              repository: $(dockerImageName)
+              imageName: $(dockerImageName)
+              tag: $(dockerImageTag)
+            displayName: 'Tag Docker Image'
+
+          - task: Docker@2
+            inputs:
+              command: 'push'
+              containerRegistry: 'DockerHub'
+              repository: $(dockerImageName)
+              tag: $(dockerImageTag)
+            displayName: 'Push Docker Image'
+
+  - stage: Deploy
+    jobs:
+      - job: DeployToAzure
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: 'Azure for Students' # Replace with your Azure service connection name
+              appName: 'Share2Teach'
+              imageName: '$(dockerImageName):$(dockerImageTag)'
+              containerRegistry: 'DockerHub' # Ensure this matches the Docker Hub service connection name
+            displayName: 'Deploy Docker Image to Azure App Service'
