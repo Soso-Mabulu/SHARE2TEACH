@@ -7,7 +7,7 @@ on:
       - main
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -18,24 +18,41 @@ jobs:
         with:
           node-version: '16'
 
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
         run: npm install
-        
+
       - name: Install jest
         run: npm install --save-dev jest
-        
-      - name: Set Jest permissions
-        run: chmod +x node_modules/.bin/jest
-
 
       - name: Run tests
         run: npm test
 
-      - name: Build Docker image
-        run: docker build -t sosokwani/share2teach-backend:latest -f docker/Dockerfile .
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Login to Docker Hub
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+      - name: Build Docker image
+        run: |
+          docker build -t sosokwani/share2teach-backend:latest -t sosokwani/share2teach-backend:${{ github.sha }} -f docker/Dockerfile .
+
       - name: Push Docker image to Docker Hub
-        run: docker push sosokwani/share2teach-backend:latest
+        run: |
+          docker push sosokwani/share2teach-backend:latest
+          docker push sosokwani/share2teach-backend:${{ github.sha }}
