@@ -1,5 +1,5 @@
 # Docker
-# Build a Docker image
+# Build and Deploy a Docker image to Azure Web App for Containers
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
 trigger:
@@ -10,6 +10,7 @@ resources:
 
 variables:
   tag: '$(Build.BuildId)'
+  imageName: 'share2teach-backend'
 
 stages:
   - stage: Build
@@ -28,13 +29,11 @@ stages:
               npm run build
             displayName: 'Build Application'
 
-          - script: docker build -t share2teach-backend:$(Build.BuildId) .
+          - script: docker build -t $(imageName):$(tag) .
             displayName: 'Build Docker Image'
 
-          - script: docker tag share2teach-backend:$(Build.BuildId) sosokwani/share2teach-backend:$(Build.BuildId)
-            displayName: 'Tag Docker Image'
+          - script: docker tag $(imageName):$(tag) $(ACR_NAME).azurecr.io/$(imageName):$(tag)
+            displayName: 'Tag Docker Image for ACR'
 
-          - script: docker push sosokwani/share2teach-backend:$(Build.BuildId)
-            displayName: 'Push Docker Image'
-
-  
+          - script: docker push $(ACR_NAME).azurecr.io/$(imageName):$(tag)
+            displayName: 'Push Docker Image to ACR'
