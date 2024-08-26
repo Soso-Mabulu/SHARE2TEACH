@@ -28,7 +28,7 @@ stages:
           - task: Docker@2
             inputs:
               command: 'login'
-              containerRegistry: 'DockerHub' # Ensure this matches the Docker Hub service connection name
+              containerRegistry: 'DockerHub'  # Ensure this matches the Docker Hub service connection name
               username: '$(DOCKER_USERNAME)'
               password: '$(DOCKER_PASSWORD)'
             displayName: 'Login to Docker Hub'
@@ -37,17 +37,17 @@ stages:
             inputs:
               command: 'tag'
               containerRegistry: 'DockerHub'
-              repository: $(dockerImageName)
-              imageName: $(dockerImageName)
-              tag: $(dockerImageTag)
+              repository: '$(dockerImageName)'
+              imageName: '$(dockerImageName)'
+              tag: '$(dockerImageTag)'
             displayName: 'Tag Docker Image'
 
           - task: Docker@2
             inputs:
               command: 'push'
               containerRegistry: 'DockerHub'
-              repository: $(dockerImageName)
-              tag: $(dockerImageTag)
+              repository: '$(dockerImageName)'
+              tag: '$(dockerImageTag)'
             displayName: 'Push Docker Image'
 
   - stage: Deploy
@@ -58,8 +58,8 @@ stages:
         steps:
           - task: AzureWebApp@1
             inputs:
-              azureSubscription: 'Azure for Students' # Replace with your Azure service connection name
+              azureSubscription: 'AzureSubscription'  # Replace with your Azure service connection name
               appName: 'Share2Teach'
               imageName: '$(dockerImageName):$(dockerImageTag)'
-              containerRegistry: 'DockerHub' # Ensure this matches the Docker Hub service connection name
+              containerRegistry: 'DockerHub'  # Ensure this matches the Docker Hub service connection name
             displayName: 'Deploy Docker Image to Azure App Service'
