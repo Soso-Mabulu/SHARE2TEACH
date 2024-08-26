@@ -1,65 +1,83 @@
-trigger:
-- main
+name: CI/CD Pipeline
 
-variables:
-  dockerImageName: 'sosokwani/share2teach-backend'
-  dockerImageTag: 'latest'
+on:
+  push:
+    branches:
+      - main
+      - dev  # Add dev branch if you want to trigger builds on dev branch
 
-stages:
-  - stage: Build
-    jobs:
-      - job: BuildDockerImage
-        pool:
-          vmImage: 'ubuntu-latest'
-        steps:
-          - task: NodeTool@0
-            inputs:
-              versionSpec: '20.x'
-            displayName: 'Install Node.js'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-          - script: |
-              npm install
-              npm run build
-            displayName: 'Build Application'
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
 
-          - script: docker build -t $(dockerImageName):$(dockerImageTag) .
-            displayName: 'Build Docker Image'
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-          - task: Docker@2
-            inputs:
-              command: 'login'
-              containerRegistry: 'DockerHub'  # Ensure this matches the Docker Hub service connection name
-              username: '$(DOCKER_USERNAME)'
-              password: '$(DOCKER_PASSWORD)'
-            displayName: 'Login to Docker Hub'
+      - name: Install dependencies
+        run: npm install
 
-          - task: Docker@2
-            inputs:
-              command: 'tag'
-              containerRegistry: 'DockerHub'
-              repository: '$(dockerImageName)'
-              imageName: '$(dockerImageName)'
-              tag: '$(dockerImageTag)'
-            displayName: 'Tag Docker Image'
+      - name: Install jest
+        run: npm install --save-dev jest
 
-          - task: Docker@2
-            inputs:
-              command: 'push'
-              containerRegistry: 'DockerHub'
-              repository: '$(dockerImageName)'
-              tag: '$(dockerImageTag)'
-            displayName: 'Push Docker Image'
+      - name: Set Jest permissions
+        run: chmod +x node_modules/.bin/jest
 
-  - stage: Deploy
-    jobs:
-      - job: DeployToAzure
-        pool:
-          vmImage: 'ubuntu-latest'
-        steps:
-          - task: AzureWebApp@1
-            inputs:
-              azureSubscription: 'AzureSubscription'  # Replace with your Azure service connection name
-              appName: 'Share2Teach'
-              imageName: '$(dockerImageName):$(dockerImageTag)'
-              containerRegistry: 'DockerHub'  # Ensure this matches the Docker Hub service connection name
-            displayName: 'Deploy Docker Image to Azure App Service'
+      - name: Run tests
+        run: npm test -- --detectOpenHandles
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t sosokwani/share2teach-backend:latest -t sosokwani/share2teach-backend:${{ github.sha }} -f docker/Dockerfile .
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push sosokwani/share2teach-backend:latest
+          docker push sosokwani/share2teach-backend:${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Pull Docker image
+        run: |
+          docker pull sosokwani/share2teach-backend:${{ github.sha }}
+
+      - name: Deploy Docker image to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'Share2Teach' # Replace with your Azure App Service name
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          images: |
+            sosokwani/share2teach-backend:${{ github.sha }}
