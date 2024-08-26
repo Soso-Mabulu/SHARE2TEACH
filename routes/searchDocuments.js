@@ -3,9 +3,8 @@ const sql = require('mssql');
 const router = express.Router();
 const connectToDatabase = require('../config/db');
 
-
 router.get('/', async (req, res) => {
-    const { module, description, university, category, academicYear } = req.query;
+    const { search } = req.query;  // single search input
 
     try {
         const connection = await connectToDatabase();
@@ -17,25 +16,17 @@ router.get('/', async (req, res) => {
         `;
         const request = new sql.Request(connection);
 
-        if (module) {
-            query += ' AND module LIKE @module';
-            request.input('module', sql.VarChar, `%${module}%`);
-        }
-        if (description) {
-            query += ' AND description LIKE @description';
-            request.input('description', sql.VarChar, `%${description}%`);
-        }
-        if (university) {
-            query += ' AND university LIKE @university';
-            request.input('university', sql.VarChar, `%${university}%`);
-        }
-        if (category) {
-            query += ' AND category LIKE @category';
-            request.input('category', sql.VarChar, `%${category}%`);
-        }
-        if (academicYear) {
-            query += ' AND academicYear = @academicYear';
-            request.input('academicYear', sql.VarChar, academicYear);
+        if (search) {
+            query += `
+                AND (
+                    module LIKE @search OR
+                    description LIKE @search OR
+                    university LIKE @search OR
+                    category LIKE @search OR
+                    academicYear LIKE @search
+                )
+            `;
+            request.input('search', sql.VarChar, `%${search}%`);
         }
 
         const result = await request.query(query);
