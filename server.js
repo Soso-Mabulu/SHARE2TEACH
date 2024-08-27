@@ -5,6 +5,7 @@ const protectedRoutes = require('./routes/protected');
 const usersRoutes = require('./routes/users');
 const uploadRoutes = require("./routes/uploadRoutes");
 const searchRoutes = require("./routes/searchDocuments");
+const faqRoutes = require('./routes/faq');
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.use(`/api/${apiVersion}/protected`, protectedRoutes);
 app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/upload`, uploadRoutes);
 app.use(`/api/${apiVersion}/search`, searchRoutes); 
+app.use(`/api/${apiVersion}/faq`, faqRoutes);
+
 
 const setupSwagger = require('./routes/swagger');
 setupSwagger(app);
