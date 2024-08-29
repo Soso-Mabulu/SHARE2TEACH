@@ -24,10 +24,10 @@ stages:
           - script: docker build -t share2teach-backend:$(Build.BuildId) .
             displayName: 'Build Docker Image'
 
-          - script: docker tag share2teach-backend:$(Build.BuildId) your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+          - script: docker tag share2teach-backend:$(Build.BuildId) sosokwani/share2teach-backend:$(Build.BuildId)
             displayName: 'Tag Docker Image'
 
-          - script: docker push your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+          - script: docker push sosokwani/share2teach-backend:$(Build.BuildId)
             displayName: 'Push Docker Image'
 
   - stage: Deploy_Development
@@ -51,7 +51,7 @@ stages:
           runOnce:
             deploy:
               steps:
-                - script: docker pull your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+                - script: docker pull sosokwani/share2teach-backend:$(Build.BuildId)
                   displayName: 'Pull Docker Image'
-                - script: docker run -d -p 3000:3000 your-dockerhub-username/share2teach-backend:$(Build.BuildId)
+                - script: docker run -d -p 3000:3000 sosokwani/share2teach-backend:$(Build.BuildId)
                   displayName: 'Run Docker Container'

@@ -244,6 +244,26 @@ paths:
         '500':
           description: Internal server error.
 
+  /api/v1/search:
+    get:
+      summary: Search for documents
+      tags:
+        - Documents
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search across module, description, university, category, and academic year.
+      responses:
+        '200':
+          description: A list of documents matching the search criteria.
+        '404':
+          description: No documents found matching the search criteria.
+        '500':
+          description: Internal server error.
+
+
 components:
   securitySchemes:
     bearerAuth:
