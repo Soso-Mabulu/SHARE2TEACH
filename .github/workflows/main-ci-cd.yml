@@ -45,8 +45,13 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Deploy to Google Cloud Run (Development)
         run: |
@@ -59,7 +64,7 @@ jobs:
 
       - name: Output the Developer URL
         run: |
-         echo "Development URL: $(gcloud run services describe share2teach-backend-dev --platform managed --region us-central1 --format 'value(status.url)')"
+          echo "Development URL: $(gcloud run services describe share2teach-backend-dev --platform managed --region us-central1 --format 'value(status.url)')"
 
   approve-deployment:
     needs: deploy-development
@@ -78,8 +83,13 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Deploy to Google Cloud Run (Production)
         run: |
