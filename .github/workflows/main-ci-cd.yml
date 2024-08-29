@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -60,18 +63,31 @@ jobs:
         run: |
           echo "Development URL: $(gcloud run services describe share2teach-backend-dev --platform managed --region us-central1 --format 'value(status.url)')"
 
-  approve-deployment:
+  manual-approval:
     needs: deploy-development
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
-      - name: Approval Step
-        uses: hmarr/auto-approve-action@v2
+      - name: Create Approval Comment
+        uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: pr } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+
+            const prNumber = pr.find(pull => pull.head.ref === context.ref.replace('refs/heads/', '')).number;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: 'The deployment to development is complete. Please review and merge to deploy to production.'
+            });
 
   deploy-production:
-    needs: approve-deployment
+    needs: manual-approval
     runs-on: ubuntu-latest
     steps:
       - name: Authenticate to Google Cloud
