@@ -30,18 +30,13 @@ jobs:
         run: npm test
 
       - name: Build Docker image
-        run: docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/share2teach-backend:latest -f docker/Dockerfile .
+        run: docker build -t docker.io/sosokwani/share2teach-backend:latest -f docker/Dockerfile .
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-      - name: Configure Docker for Google Cloud
-        run: gcloud auth configure-docker
-
-      - name: Push Docker image to Google Container Registry
-        run: docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/share2teach-backend:latest
+      - name: Push Docker image to Docker Hub
+        run: docker push docker.io/sosokwani/share2teach-backend:latest
 
   deploy-development:
     needs: build
@@ -55,7 +50,7 @@ jobs:
       - name: Deploy to Google Cloud Run (Development)
         run: |
           gcloud run deploy share2teach-backend-dev \
-          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/share2teach-backend:latest \
+          --image docker.io/sosokwani/share2teach-backend:latest \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated \
@@ -87,7 +82,7 @@ jobs:
       - name: Deploy to Google Cloud Run (Production)
         run: |
           gcloud run deploy share2teach-backend-prod \
-          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/share2teach-backend:latest \
+          --image docker.io/sosokwani/share2teach-backend:latest \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated \
