@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+
+  workflow_dispatch:  # Allows manual trigger of the production deployment workflow
 
 jobs:
   build:
@@ -63,32 +62,18 @@ jobs:
         run: |
           echo "Development URL: $(gcloud run services describe share2teach-backend-dev --platform managed --region us-central1 --format 'value(status.url)')"
 
-  manual-approval:
+  approve-deployment:
     needs: deploy-development
     runs-on: ubuntu-latest
     steps:
-      - name: Create Approval Comment
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const { data: pr } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open'
-            });
-
-            const prNumber = pr.find(pull => pull.head.ref === context.ref.replace('refs/heads/', '')).number;
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: 'The deployment to development is complete. Please review and merge to deploy to production.'
-            });
+      - name: Approval
+        run: |
+          echo "Deployment to production requires manual approval. Trigger the production deployment workflow manually."
 
   deploy-production:
-    needs: manual-approval
     runs-on: ubuntu-latest
+    needs: approve-deployment
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
