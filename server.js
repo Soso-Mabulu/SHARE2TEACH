@@ -41,6 +41,12 @@ app.use(`/api/${apiVersion}/faq`, faqRoutes);
 const setupSwagger = require('./routes/swagger');
 setupSwagger(app);
 
+// Handle requests to the root path
+app.get('/', (req, res) => {
+  res.send(`<h1>Welcome to the Share2Teach Backend API</h1><p>Use the appropriate API endpoints to interact with the system.</p>
+    <p>Refer to the <a href="/api-docs">API documentation</a> for more information.</p>`);
+});
+
 module.exports = app;
 
 if (require.main === module) {
