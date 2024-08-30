@@ -8,12 +8,12 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZU
 
 // Middleware to check moderator access
 const checkModeratorAccess = (req, res, next) => {
-  // ... (same as before)
+
 };
 
-// File model
+
 const fileSchema = new mongoose.Schema({
-  // ... (same as before)
+
 });
 
 const File = mongoose.model('File', fileSchema);
@@ -34,7 +34,7 @@ const uploadFileToBlob = async (fileId, fileData) => {
 
 app.post('/files', async (req, res) => {
   try {
-    const fileData = req.body.fileData; // Assuming file data is in the request body
+    const fileData = req.body.fileData; 
 
     const newFile = new File({
       name: req.body.name,
@@ -50,4 +50,3 @@ app.post('/files', async (req, res) => {
   }
 });
 
-// ... other routes and middleware
