@@ -63,6 +63,26 @@ describe('File Review Endpoint', () => {
       .set('Authorization', 'Bearer validToken')
       .expect(500);
   });
+  it('should retrieve file review details', async () => {
+    const mockFile = {
+      _id: '123',
+      name: 'test-file.txt',
+      reviewComments: 'Minor formatting issues',
+      reviewer: { name: 'John Doe' },
+      reviewStatus: 'approved'
+    };
+    const findByIdStub = sinon.stub(File, 'findById').resolves(mockFile);
+  
+    const res = await request(app)
+      .get('/files/123/review')
+      .set('Authorization', 'Bearer validToken')
+      .expect(200);
+  
+    chai.expect(res.body.reviewComments).to.equal('Minor formatting issues');
+    chai.expect(res.body.reviewer.name).to.equal('John Doe');
+    chai.expect(res.body.reviewStatus).to.equal('approved');
+    expect(findByIdStub.calledOnceWithExactly('123')).to.be.true;
+  });
 
   it('should handle invalid status', async () => {
     const mockFile = { _id: '123', save: sinon.stub().resolves() };
