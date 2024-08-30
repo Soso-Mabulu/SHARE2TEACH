@@ -16,9 +16,15 @@ app.use(cors());
 
 // Use the cors middleware with specific configuration
 app.use(cors({
-  origin: '*', // Replace with your frontend domain
+  origin: [
+    'https://your-frontend-domain.com', // Replace with your actual frontend domain
+    'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app', // Replace with your Google Cloud link
+    'http://localhost:3000', // Allow requests from localhost for development purposes
+    '*'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Restrict allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Restrict allowed headers
+  credentials: true, // Allow cookies and authentication headers
 }));
 
 app.use(bodyParser.json());
