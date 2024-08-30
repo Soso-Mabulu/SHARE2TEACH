@@ -1,48 +1,53 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const { BlobServiceClient } = require('@azure/storage-blob');
-const jwt = require('jsonwebtoken');
-
-const app = express();
-app.use(express.json());
-
 // Database connection
-mongoose.connect('your_mongodb_connection_string')
+const db = mongoose.connect('your_mongodb_connection_string')
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
-
-// Database models (File, ModerationLog, etc.)
 
 // Azure Blob Storage Setup
 const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
 
 // Middleware to check moderator access
 const checkModeratorAccess = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).send('Unauthorized');
-  }
-  const token = authHeader.split(' ')[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== 'moderator') {
-      return res.status(403).send('Forbidden');
-    }
-    req.user = decoded;
-    next();
-  } catch (error) {
-    console.error('JWT verification error:', error);
-    return res.status(401).send('Unauthorized');
-  }
+  // ... (same as before)
 };
 
-// Example File model schema
+// File model
 const fileSchema = new mongoose.Schema({
-  name: String,
-  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
-  details: String, // Other file metadata
-  // Add other relevant fields as needed
+  // ... (same as before)
 });
 
 const File = mongoose.model('File', fileSchema);
+
+// Example function to upload a file to Azure Blob Storage
+const uploadFileToBlob = async (fileId, fileData) => {
+  try {
+    const containerClient = blobServiceClient.getContainerClient('your-container-name');
+    const blockBlobClient = containerClient.getBlockBlobClient(fileId);
+
+    await blockBlobClient.uploadData(fileData);
+    console.log('File uploaded successfully');
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    throw error; 
+  }
+};
+
+app.post('/files', async (req, res) => {
+  try {
+    const fileData = req.body.fileData; // Assuming file data is in the request body
+
+    const newFile = new File({
+      name: req.body.name,
+    });
+
+    await newFile.save();
+    await uploadFileToBlob(newFile._id, fileData);
+
+    res.status(201).json(newFile);
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).send('Internal server error');
+  }
+});
+
+// ... other routes and middleware
