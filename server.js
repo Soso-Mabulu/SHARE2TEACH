@@ -14,6 +14,13 @@ const app = express();
 // Use the cors middleware
 app.use(cors());
 
+// Use the cors middleware with specific configuration
+app.use(cors({
+  origin: '*', // Replace with your frontend domain
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Restrict allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Restrict allowed headers
+}));
+
 app.use(bodyParser.json());
 
 const apiVersion = 'v1';
