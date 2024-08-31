@@ -388,6 +388,53 @@ paths:
                     type: "string"
                     example: "Error message details"
 
+  /api/v1/documents/{docId}:
+    post:
+      summary: Moderate a document (approve or deny)
+      description: "Allows a moderator to approve or deny a document. When approved, the document is moved to the APPROVED_DOCUMENT table. When denied, it's moved to the DENIED_DOCUMENT table."
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: docId
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: "The ID of the document to be moderated."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [approve, deny]
+                  example: approve
+                  description: "Action to be taken on the document."
+      responses:
+        '200':
+          description: Document successfully moderated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Document successfully approved."
+        '400':
+          description: Invalid action or missing parameters.
+        '404':
+          description: Document not found or already moderated.
+        '500':
+          description: Internal server error.
+
+
 components:
   securitySchemes:
     bearerAuth:
