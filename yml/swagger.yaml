@@ -318,7 +318,7 @@ paths:
                     type: "string"
                     example: "Error message details"
 
-  /api/v1/documents:
+  /api/v1/documents/pending:
     get:
       summary: "Get Pending Documents"
       description: "Retrieve a list of documents with a status of 'pending'."
