@@ -56,11 +56,11 @@ router.post('/signin', async (req, res) => {
       .query(query);
 
     const user = result.recordset[0];
+
+    const token = generateToken(user);
     if (!user || !(await bcrypt.compare(password, user.userPassword))) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
-    const token = generateToken(user);
     res.json({ token });
   } catch (err) {
     console.error('Sign In Error:', err.message); // Detailed error logging
