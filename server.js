@@ -8,6 +8,7 @@ const usersRoutes = require('./routes/users');
 const uploadRoutes = require("./routes/uploadRoutes");
 const searchRoutes = require("./routes/searchDocuments");
 const faqRoutes = require('./routes/faq');
+const passwordResetRoutes = require('./routes/passreset');
 
 const app = express();
 
@@ -17,8 +18,8 @@ app.use(cors());
 // Use the cors middleware with specific configuration
 app.use(cors({
   origin: [
-    'https://your-frontend-domain.com', // Replace with your actual frontend domain
-    'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app', // Replace with your Google Cloud link
+    'https://example-frontend-domain.com', // will replace with our actual frontend domain
+    'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app', // Google Cloud link
     'http://localhost:3000', // Allow requests from localhost for development purposes
     '*'
   ],
@@ -37,6 +38,7 @@ app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/upload`, uploadRoutes);
 app.use(`/api/${apiVersion}/search`, searchRoutes); 
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
+app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
 
 const setupSwagger = require('./routes/swagger');
 setupSwagger(app);

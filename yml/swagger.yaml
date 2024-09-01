@@ -99,6 +99,83 @@ paths:
                     example: "User signed in successfully"
         '401':
           description: Unauthorized, invalid credentials
+  
+  /api/v1/password-reset/password-reset-request:
+    post:
+      summary: Request a password reset
+      tags:
+        - Authentication
+      description: Sends a password reset email to the user. The user will receive a link to reset their password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: The user's email address.
+                  example: "john.doe@example.com"
+              required:
+                - email
+      responses:
+        '200':
+          description: Password reset email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password reset email sent"
+        '400':
+          description: Bad request, invalid email
+        '404':
+          description: Email not found
+
+  /api/v1/password-reset/reset-password:
+    post:
+      summary: Reset password
+      tags:
+        - Authentication
+      description: Resets the user's password using a token sent to their email. The user needs to provide a new password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The password reset token sent to the user's email.
+                  example: "abcdef1234567890"
+                newPassword:
+                  type: string
+                  description: The new password for the user.
+                  example: "newpassword123"
+              required:
+                - token
+                - newPassword
+      responses:
+        '200':
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password has been reset successfully"
+        '400':
+          description: Bad request, invalid token or password
+        '404':
+          description: Token or user not found
+        '500':
+          description: Internal server error
 
   /api/v1/users:
     get:
