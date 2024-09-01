@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const generateToken = require('../utils/jwt');
 const sql = require('mssql'); // Ensure sql is imported
 const db = require('../config/db'); // Import the db.js file
