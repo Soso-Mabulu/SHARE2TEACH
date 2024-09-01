@@ -13,9 +13,6 @@ const passwordResetRoutes = require('./routes/passreset');
 
 const app = express();
 
-// Use the cors middleware
-app.use(cors());
-
 // Use the cors middleware with specific configuration
 app.use(cors({
   origin: [
@@ -39,7 +36,6 @@ app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/upload`, uploadRoutes);
 app.use(`/api/${apiVersion}/search`, searchRoutes);
 app.use(`/api/${apiVersion}/documents`, moderationRoutes);
-app.use(`/api/${apiVersion}/search`, searchRoutes); 
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
 app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
 
