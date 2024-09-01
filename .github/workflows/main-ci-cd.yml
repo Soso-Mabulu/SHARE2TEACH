@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   workflow_dispatch:  # Allows manual trigger of the production deployment workflow
 
 jobs:
@@ -42,13 +41,18 @@ jobs:
         run: npm test
 
       - name: Build Docker image
-        run: docker build -t docker.io/sosokwani/share2teach-backend:latest -f docker/Dockerfile .
+        run: docker build -t LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/share2teach-backend:latest -f docker/Dockerfile .
 
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Push Docker image to Docker Hub
-        run: docker push docker.io/sosokwani/share2teach-backend:latest
+      - name: Configure Docker to use Google Artifact Registry
+        run: gcloud auth configure-docker LOCATION-docker.pkg.dev
+
+      - name: Push Docker image to Google Artifact Registry
+        run: docker push LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/share2teach-backend:latest
 
   deploy-development:
     needs: build
@@ -62,11 +66,12 @@ jobs:
       - name: Deploy to Google Cloud Run (Development)
         run: |
           gcloud run deploy share2teach-backend-dev \
-          --image docker.io/sosokwani/share2teach-backend:latest \
+          --image LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/share2teach-backend:latest \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated \
           --project ${{ secrets.GCP_PROJECT_ID }}
+
       - name: Output the Development URL
         run: |
           echo "Development URL: $(gcloud run services describe share2teach-backend-dev --platform managed --region us-central1 --format 'value(status.url)')"
@@ -92,11 +97,12 @@ jobs:
       - name: Deploy to Google Cloud Run (Production)
         run: |
           gcloud run deploy share2teach-backend-prod \
-          --image docker.io/sosokwani/share2teach-backend:latest \
+          --image LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/share2teach-backend:latest \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated \
           --project ${{ secrets.GCP_PROJECT_ID }}
+
       - name: Output the Production URL
         run: |
           echo "Production URL: $(gcloud run services describe share2teach-backend-prod --platform managed --region us-central1 --format 'value(status.url)')"
