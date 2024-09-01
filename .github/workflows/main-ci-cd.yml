@@ -19,18 +19,24 @@ jobs:
         with:
           node-version: '16'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Clean and reinstall dependencies
+        run: |
+          rm -rf node_modules
+          npm install
+
+      - name: Fix permissions for node modules
+        run: sudo chmod -R 755 node_modules
+
+      - name: Rebuild bcrypt from source
+        run: |
+          npm install -g node-gyp
+          npm rebuild bcrypt --build-from-source
 
       - name: Install jest
         run: npm install --save-dev jest
 
       - name: Set Jest permissions
         run: chmod +x node_modules/.bin/jest
-      - name: Rebuild bcrypt from source
-        run: |
-          npm install -g node-gyp
-          npm rebuild bcrypt --build-from-source
 
       - name: Run tests
         run: npm test
@@ -61,7 +67,6 @@ jobs:
           --region us-central1 \
           --allow-unauthenticated \
           --project ${{ secrets.GCP_PROJECT_ID }}
-
       - name: Output the Development URL
         run: |
           echo "Development URL: $(gcloud run services describe share2teach-backend-dev --platform managed --region us-central1 --format 'value(status.url)')"
@@ -92,7 +97,6 @@ jobs:
           --region us-central1 \
           --allow-unauthenticated \
           --project ${{ secrets.GCP_PROJECT_ID }}
-
       - name: Output the Production URL
         run: |
           echo "Production URL: $(gcloud run services describe share2teach-backend-prod --platform managed --region us-central1 --format 'value(status.url)')"
