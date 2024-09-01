@@ -41,7 +41,7 @@ jobs:
         run: npm test
 
       - name: Build Docker image
-        run: docker build -t LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/share2teach-backend:latest -f docker/Dockerfile .
+        run: docker build -t us-east1-docker.pkg.dev/share2teach/share2teach/share2teach-backend:latest -f docker/Dockerfile .
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
@@ -49,10 +49,17 @@ jobs:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Configure Docker to use Google Artifact Registry
-        run: gcloud auth configure-docker LOCATION-docker.pkg.dev
+        run: gcloud auth configure-docker us-east1-docker.pkg.dev
 
       - name: Push Docker image to Google Artifact Registry
-        run: docker push LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/share2teach-backend:latest
+        run: docker push us-east1-docker.pkg.dev/share2teach/share2teach/share2teach-backend:latest
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push Docker image to Docker Hub
+        run: docker tag us-east1-docker.pkg.dev/share2teach/share2teach/share2teach-backend:latest docker.io/sosokwani/share2teach-backend:latest
+             docker push docker.io/sosokwani/share2teach-backend:latest
 
   deploy-development:
     needs: build
@@ -66,7 +73,7 @@ jobs:
       - name: Deploy to Google Cloud Run (Development)
         run: |
           gcloud run deploy share2teach-backend-dev \
-          --image LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/share2teach-backend:latest \
+          --image us-east1-docker.pkg.dev/share2teach/share2teach/share2teach-backend:latest \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated \
@@ -97,7 +104,7 @@ jobs:
       - name: Deploy to Google Cloud Run (Production)
         run: |
           gcloud run deploy share2teach-backend-prod \
-          --image LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/share2teach-backend:latest \
+          --image us-east1-docker.pkg.dev/share2teach/share2teach/share2teach-backend:latest \
           --platform managed \
           --region us-central1 \
           --allow-unauthenticated \
