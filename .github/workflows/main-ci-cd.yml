@@ -27,6 +27,10 @@ jobs:
 
       - name: Set Jest permissions
         run: chmod +x node_modules/.bin/jest
+      - name: Rebuild bcrypt from source
+        run: |
+          npm install -g node-gyp
+          npm rebuild bcrypt --build-from-source
 
       - name: Run tests
         run: npm test
