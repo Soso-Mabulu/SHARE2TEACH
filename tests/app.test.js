@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../server'); // Ensure this path is correct
+const { app, server } = require('../server'); // Ensure this path is correct
 
 jest.setTimeout(10000); // 10 seconds
 
@@ -32,8 +32,7 @@ describe('Sign-In Endpoint Tests', () => {
     expect(response.body).toHaveProperty('error', 'Invalid credentials'); // Adjust based on your actual error message
   });
 
-  afterAll(async () => {
-    // If you need to close database connections or other resources, do it here
-    // For example: await db.close();
+  afterAll(done => {
+    server.close(done); // Close the server after tests are complete
   });
 });
