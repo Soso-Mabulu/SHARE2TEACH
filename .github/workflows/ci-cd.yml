@@ -28,17 +28,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install jest
-        run: npm install --save-dev jest
+      - name: Fix permissions for node-pre-gyp
+        run: chmod +x ./node_modules/.bin/node-pre-gyp
 
       - name: Rebuild bcrypt for the current environment
         run: npm rebuild bcrypt --build-from-source
+
+      - name: Install jest
+        run: npm install --save-dev jest
       
       - name: Set Jest permissions
         run: chmod +x node_modules/.bin/jest
 
       - name: Run tests
         run: npm test -- --detectOpenHandles
-      
-
-  
