@@ -11,7 +11,7 @@ async function connectToDatabase() {
             database: process.env.DB_NAME,
             options: {
                 encrypt: true, // Set to false if not using SSL
-                trustServerCertificate: false // Set to true for local development with self-signed certificates
+                trustServerCertificate: true // Set to true for local development with self-signed certificates
             }
         });
 
