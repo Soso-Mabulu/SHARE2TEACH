@@ -3,10 +3,19 @@ info:
   title: Share-2-Teach API
   description: This is the backend API for the Share-2-Teach application. It allows users to upload, share, and view documents.
   version: 1.0.0
-servers:
-  - url: http://localhost:3000
-    description: Local development server
-
+  servers:
+    - url: "{scheme}://{host}:{port}/myapp/"
+      description: Default Server URL
+      variables:
+        scheme:
+          default: "http"
+          enum:
+            - "http"
+            - "https"
+        host:
+          default: "localhost"
+        port:
+          default: "3000"
 paths:
   /api/v1/auth/signup:
     post:
