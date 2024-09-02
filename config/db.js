@@ -11,11 +11,10 @@ async function connectToDatabase() {
             database: process.env.DB_NAME,
             options: {
                 encrypt: true, // Set to false if not using SSL
-                trustServerCertificate: false // Set to true for local development with self-signed certificates
+                trustServerCertificate: true // Set to true for local development with self-signed certificates
             }
         });
-
-        console.log('Connected to the database.');
+        
         return pool;
     } catch (err) {
         console.error('Database connection failed:', err.message);
