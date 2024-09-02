@@ -17,9 +17,7 @@ const app = express();
 // Use CORS middleware
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin, like mobile apps or curl
     if (!origin) return callback(null, true);
-    // Define a list of allowed origins
     const allowedOrigins = [
       'https://example-frontend-domain.com',
       'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app',
@@ -63,9 +61,9 @@ app.get('/', (req, res) => {
 
 // Start server
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   console.log(`Swagger UI is available at http://localhost:${port}/api-docs`);
 });
 
-module.exports = app;
+module.exports = { app, server }; // Export both app and server

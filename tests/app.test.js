@@ -1,12 +1,12 @@
 const request = require('supertest');
-const { app, server } = require('../server'); // Ensure this path is correct
+const { app, server } = require('../server'); // Adjust path if necessary
 
 jest.setTimeout(10000); // 10 seconds
 
 describe('Sign-In Endpoint Tests', () => {
   const adminCredentials = {
-    email: 'john.doe@example.com', // actual admin email
-    password: 'password123'        // actual admin password
+    email: 'john.doe@example.com', // Actual admin email
+    password: 'password123'        // Actual admin password
   };
 
   it('should return a token when valid credentials are provided', async () => {
