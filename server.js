@@ -15,15 +15,24 @@ const app = express();
 
 // Use the cors middleware with specific configuration
 app.use(cors({
-  origin: [
-    'https://example-frontend-domain.com', // will replace with our actual frontend domain
-    'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app', // Google Cloud link
-    'http://localhost:3000', // Allow requests from localhost for development purposes
-    '*'
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Restrict allowed HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Restrict allowed headers
-  credentials: true, // Allow cookies and authentication headers
+  origin: function (origin, callback) {
+    // Allow requests with no origin, like mobile apps or curl
+    if (!origin) return callback(null, true);
+    // Define a list of allowed origins
+    const allowedOrigins = [
+      'https://example-frontend-domain.com',
+      'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app',
+      'http://localhost:3000'
+    ];
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }));
 
 app.use(bodyParser.json());
