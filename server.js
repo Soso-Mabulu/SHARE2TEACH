@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors'); // Import the cors middleware
+const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protected');
@@ -13,16 +13,12 @@ const passwordResetRoutes = require('./routes/passreset');
 
 const app = express();
 
-// Use the cors middleware
-app.use(cors());
-
 // Use the cors middleware with specific configuration
 app.use(cors({
   origin: [
-    'https://example-frontend-domain.com', // will replace with our actual frontend domain
+    'https://example-frontend-domain.com', // Replace with your actual frontend domain
     'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app', // Google Cloud link
     'http://localhost:3000', // Allow requests from localhost for development purposes
-    '*'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'], // Restrict allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Restrict allowed headers
