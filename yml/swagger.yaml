@@ -4,7 +4,7 @@ info:
   description: This is the backend API for the Share-2-Teach application. It allows users to upload, share, and view documents.
   version: 1.0.0
   servers:
-    - url: "{scheme}://{host}:{port}/myapp/"
+    - url: "{scheme}://{host}:{port}/"
       description: Default Server URL
       variables:
         scheme:
