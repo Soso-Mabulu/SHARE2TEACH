@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors');
+const cors = require('cors'); // Import the cors middleware
 
 const authRoutes = require('./routes/auth');
 const protectedRoutes = require('./routes/protected');
@@ -13,16 +13,26 @@ const passwordResetRoutes = require('./routes/passreset');
 
 const app = express();
 
-// Use the cors middleware with specific configuration
+// Use the cors middleware with a more generalized configuration
 app.use(cors({
-  origin: [
-    'https://example-frontend-domain.com', // Replace with your actual frontend domain
-    'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app', // Google Cloud link
-    'http://localhost:3000', // Allow requests from localhost for development purposes
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Restrict allowed HTTP methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Restrict allowed headers
-  credentials: true, // Allow cookies and authentication headers
+  origin: function (origin, callback) {
+    // Allow requests with no origin, like mobile apps or curl
+    if (!origin) return callback(null, true);
+    // Define a list of allowed origins
+    const allowedOrigins = [
+      'https://example-frontend-domain.com',
+      'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app',
+      'http://localhost:3000'
+    ];
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }));
 
 app.use(bodyParser.json());
@@ -35,7 +45,6 @@ app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/upload`, uploadRoutes);
 app.use(`/api/${apiVersion}/search`, searchRoutes);
 app.use(`/api/${apiVersion}/documents`, moderationRoutes);
-app.use(`/api/${apiVersion}/search`, searchRoutes); 
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
 app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
 
