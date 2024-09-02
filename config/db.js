@@ -10,8 +10,8 @@ async function connectToDatabase() {
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
             options: {
-                encrypt: true, // Set to false if not using SSL
-                trustServerCertificate: true // Set to true for local development with self-signed certificates
+                encrypt: true,
+                trustServerCertificate: true
             }
         });
         

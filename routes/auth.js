@@ -11,8 +11,7 @@ router.post('/signup', async (req, res) => {
 
   let connection;
   try {
-    connection = await db(); // Use db() to get a connection pool instance
-
+    connection = await db();
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = `
       INSERT INTO [User] (userName, userLName, email, userPassword, userType)
@@ -35,7 +34,7 @@ router.post('/signup', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
   } finally {
     if (connection) {
-      await connection.close(); // Ensure the connection is closed
+      await connection.close();
     }
   }
 });
@@ -46,8 +45,7 @@ router.post('/signin', async (req, res) => {
 
   let connection;
   try {
-    connection = await db(); // Use db() to get a connection pool instance
-
+    connection = await db();
     const query = 'SELECT * FROM [User] WHERE email = @email';
     const result = await connection.request()
       .input('email', sql.VarChar, email)
@@ -66,7 +64,7 @@ router.post('/signin', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
   } finally {
     if (connection) {
-      await connection.close(); // Ensure the connection is closed
+      await connection.close();
     }
   }
 });
