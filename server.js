@@ -22,7 +22,8 @@ app.use(cors({
     const allowedOrigins = [
       'https://example-frontend-domain.com',
       'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app',
-      'http://localhost:3000'
+      'http://localhost:3000',
+      '*'
     ];
     if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
       callback(null, true);
