@@ -17,7 +17,7 @@ info:
         port:
           default: "3000"
 paths:
-  /api/v1/auth/create-account:
+  /api/v1/auth/signup:
     post:
       summary: Register a new user
       tags:
@@ -67,7 +67,7 @@ paths:
         '409':
           description: Conflict, email already exists
 
-  /api/v1/auth/login:
+  /api/v1/auth/signin:
     post:
       summary: Sign in a user
       tags:
