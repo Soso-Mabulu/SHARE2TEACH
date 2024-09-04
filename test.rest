@@ -20,6 +20,7 @@ Content-Type: application/json
   "password": "password123"
 }
 
+<<<<<<< HEAD
 ###
 
 ### Test File Upload Route (Replace with your actual JWT token)
@@ -28,3 +29,30 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6I
 Content-Type: multipart/form-data
 
 file=@C:/Users/hp/Downloads/cmpg322-test2-2024-2024-cmpg322-test-2.pdf
+=======
+
+### Get All Users
+GET http://localhost:3000/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzIzMTkxMjMyLCJleHAiOjE3MjMxOTQ4MzJ9.5hiiG5hXMImkxao2oTgXnloOY8tpOviq8hCbsBXRpDQ
+Accept: application/json
+
+### Example Response
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+[
+    {
+        "userId": 1,
+        "userName": "John Doe",
+        "userEmail": "john.doe@example.com",
+        "userRole": "admin"
+    },
+    {
+        "userId": 2,
+        "userName": "Jane Smith",
+        "userEmail": "jane.smith@example.com",
+        "userRole": "user"
+    }
+]
+>>>>>>> origin/develop

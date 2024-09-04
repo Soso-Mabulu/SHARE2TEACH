@@ -1,41 +1,71 @@
-// routes/auth.js
 const express = require('express');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const generateToken = require('../utils/jwt');
-const db = require('../config/db'); // Import your MySQL config
+const sql = require('mssql');
+const db = require('../config/db');
 const router = express.Router();
 
 // Sign Up Route
 router.post('/signup', async (req, res) => {
-  const { userName, userLName, email, password} = req.body;
+  const { userName, userLName, email, password } = req.body;
+
+  let connection;
   try {
+    connection = await db();
     const hashedPassword = await bcrypt.hash(password, 10);
-    const query = 'INSERT INTO User (userName, userLName, email, userPassword) VALUES (?, ?, ?, ?)';
-    db.query(query, [userName, userLName, email, hashedPassword], (err, results) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json({ message: 'User created', userId: results.insertId });
-    });
+    const query = `
+      INSERT INTO [User] (userName, userLName, email, userPassword, userType)
+      VALUES (@userName, @userLName, @email, @userPassword, @userType)
+    `;
+    
+    const defaultUserType = 'public';
+
+    await connection.request()
+      .input('userName', sql.VarChar, userName)
+      .input('userLName', sql.VarChar, userLName)
+      .input('email', sql.VarChar, email)
+      .input('userPassword', sql.VarChar, hashedPassword)
+      .input('userType', sql.VarChar, defaultUserType)
+      .query(query);
+
+    res.status(201).json({ message: 'User created' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Sign Up Error:', err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  } finally {
+    if (connection) {
+      await connection.close();
+    }
   }
 });
 
 // Sign In Route
 router.post('/signin', async (req, res) => {
   const { email, password } = req.body;
+
+  let connection;
   try {
-    const query = 'SELECT * FROM User WHERE email = ?';
-    db.query(query, [email], async (err, results) => {
-      if (err) return res.status(500).json({ error: err.message });
-      const user = results[0];
-      if (!user || !(await bcrypt.compare(password, user.userPassword))) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-      const token = generateToken(user);
-      res.json({ token });
-    });
+    connection = await db();
+    const query = 'SELECT * FROM [User] WHERE email = @email';
+    const result = await connection.request()
+      .input('email', sql.VarChar, email)
+      .query(query);
+
+    const user = result.recordset[0];
+
+    if (!user || !(await bcrypt.compare(password, user.userPassword))) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = generateToken(user);
+    res.json({ token });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Sign In Error:', err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  } finally {
+    if (connection) {
+      await connection.close();
+    }
   }
 });
 

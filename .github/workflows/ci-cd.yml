@@ -1,0 +1,44 @@
+name: Developer CI Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Fix permissions for node-pre-gyp
+        run: chmod +x ./node_modules/.bin/node-pre-gyp
+
+      - name: Rebuild bcrypt for the current environment
+        run: npm rebuild bcrypt --build-from-source
+
+      - name: Install jest
+        run: npm install --save-dev jest
+      
+      - name: Set Jest permissions
+        run: chmod +x node_modules/.bin/jest
+
+      - name: Run tests
+        run: npm test -- --detectOpenHandles

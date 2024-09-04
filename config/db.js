@@ -1,19 +1,25 @@
-const mysql = require('mysql');
+const sql = require('mssql');
 require('dotenv').config();
 
-const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
-
-db.connect((err) => {
-    if (err) {
-        console.error('Database connection failed:', err.stack);
-        return;
+async function connectToDatabase() {
+    try {
+        // Create a connection pool
+        const pool = await sql.connect({
+            server: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            options: {
+                encrypt: true,
+                trustServerCertificate: true
+            }
+        });
+        
+        return pool;
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        throw err;
     }
-    console.log('Connected to database.');
-});
+}
 
-module.exports = db;
+module.exports = connectToDatabase;
