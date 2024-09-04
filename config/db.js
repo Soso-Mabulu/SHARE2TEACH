@@ -1,21 +1,23 @@
-const mysql = require('mysql2/promise');
+const sql = require('mssql');
 require('dotenv').config();
 
 async function connectToDatabase() {
     try {
-        const db = await mysql.createConnection({
-            host: process.env.DB_HOST,
+        // Create a connection pool
+        const pool = await sql.connect({
+            server: process.env.DB_HOST,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
-            ssl: {
-                rejectUnauthorized: true, // You might need to adjust this depending on your SSL setup
+            options: {
+                encrypt: true,
+                trustServerCertificate: true
             }
         });
-        console.log('Connected to the database.');
-        return db;
+        
+        return pool;
     } catch (err) {
-        console.error('Database connection failed:', err.code, err.message);
+        console.error('Database connection failed:', err.message);
         throw err;
     }
 }

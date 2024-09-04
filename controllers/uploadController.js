@@ -1,3 +1,4 @@
+const sql = require('mssql');
 const { s3Upload } = require("../utils/azureBlob");
 const connectToDatabase = require("../config/db");
 const jwt = require('jsonwebtoken');
@@ -69,28 +70,42 @@ const uploadFiles = async (req, res) => {
         }
 
         // Insert document details into the DOCUMENT table
-        const [documentResult] = await connection.execute(
-            'INSERT INTO DOCUMENT (module, description, status, location, university, category, academicYear, userId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            parameters
+        const request = new sql.Request(connection);
+        request.input('module', sql.VarChar, module)
+            .input('description', sql.VarChar, description)
+            .input('status', sql.VarChar, 'pending')
+            .input('location', sql.VarChar, url)
+            .input('university', sql.VarChar, university)
+            .input('category', sql.VarChar, category)
+            .input('academicYear', sql.VarChar, academicYear)
+            .input('userId', sql.Int, userId);
+
+        const documentResult = await request.query(
+            `INSERT INTO DOCUMENT (module, description, status, location, university, category, academicYear, userId) 
+             OUTPUT inserted.docId 
+             VALUES (@module, @description, @status, @location, @university, @category, @academicYear, @userId)`
         );
 
-        if (!documentResult || !documentResult.insertId) {
+        if (!documentResult.recordset || !documentResult.recordset[0] || !documentResult.recordset[0].docId) {
             return res.status(500).json({ message: "Failed to save document details in the database" });
         }
 
-        // Insert into PENDING_DOCUMENT table
-        await connection.execute(
-            'INSERT INTO PENDING_DOCUMENT (docId, datetime_of_upload) VALUES (?, NOW())',
-            [documentResult.insertId]
-        );
+        const docId = documentResult.recordset[0].docId;
 
-        res.json({ status: "success", message: "Document uploaded and marked as pending", documentId: documentResult.insertId });
+        // Insert into PENDING_DOCUMENT table
+        await connection.request()
+            .input('docId', sql.Int, docId)
+            .query(
+                'INSERT INTO PENDING_DOCUMENT (docId, datetime_of_upload) VALUES (@docId, GETDATE())'
+            );
+
+        res.json({ status: "success", message: "Document uploaded and marked as pending", documentId: docId });
     } catch (err) {
         console.error('Unexpected error:', err);
         res.status(500).json({ message: "Failed to verify user role or save document", error: err.message });
     } finally {
         if (connection) {
-            await connection.end();
+            await connection.close();
         }
     }
 };
