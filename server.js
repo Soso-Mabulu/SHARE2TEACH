@@ -3,7 +3,10 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const setupSwagger = require('./routes/swagger');
 
-const authRoutes = require('./routes/auth');
+// Importing new routes
+const signupRoutes = require('./routes/signup');
+const signinRoutes = require('./routes/signin');
+
 const protectedRoutes = require('./routes/protected');
 const usersRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/uploadRoutes');
@@ -39,8 +42,10 @@ app.use(bodyParser.json());
 
 const apiVersion = 'v1';
 
-// Define routes
-app.use(`/api/${apiVersion}/auth`, authRoutes);
+// Use the new sign-up and sign-in routes
+app.use(`/api/${apiVersion}/signup`, signupRoutes);
+app.use(`/api/${apiVersion}/signin`, signinRoutes);
+
 app.use(`/api/${apiVersion}/protected`, protectedRoutes);
 app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/upload`, uploadRoutes);
