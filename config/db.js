@@ -10,10 +10,16 @@ async function connectToDatabase() {
             password: process.env.DB_PASSWORD,
             database: process.env.DB_NAME,
             options: {
-                encrypt: true,
-                trustServerCertificate: true
+              encrypt: true,
+              trustServerCertificate: true,
+            },
+            pool: {
+              max: 10, // maximum number of connections in the pool
+              min: 0,
+              idleTimeoutMillis: 30000,
             }
-        });
+          });
+          
         
         return pool;
     } catch (err) {
