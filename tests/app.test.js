@@ -11,7 +11,7 @@ describe('Sign-In Endpoint Tests', () => {
 
   it('should return a token when valid credentials are provided', async () => {
     const response = await request(app)
-      .post('/api/v1/auth/signin') // Ensure this route is correct
+      .post('/api/v1/signin') // Ensure this route is correct
       .send(adminCredentials);
 
     expect(response.statusCode).toBe(200);
@@ -25,7 +25,7 @@ describe('Sign-In Endpoint Tests', () => {
     };
 
     const response = await request(app)
-      .post('/api/v1/auth/signin') // Ensure this route is correct
+      .post('/api/v1/signin') // Ensure this route is correct
       .send(invalidCredentials);
 
     expect(response.statusCode).toBe(401);
