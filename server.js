@@ -19,24 +19,12 @@ const app = express();
 
 // Use CORS middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    const allowedOrigins = [
-      'https://example-frontend-domain.com',
-      'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app',
-      'http://localhost:3000',
-      '*'
-    ];
-    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: '*',  // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['*'],
-  credentials: true,
+  allowedHeaders: '*',  // Allow all headers
+  credentials: true,  // If you need to allow cookies or authentication credentials
 }));
+
 
 app.use(bodyParser.json());
 
