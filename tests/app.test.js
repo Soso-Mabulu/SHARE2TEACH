@@ -1,7 +1,8 @@
 const request = require('supertest');
 const { app, server } = require('../server'); // Adjust path if necessary
+const sql = require('mssql'); // Import the mssql package used in db.js
 
-jest.setTimeout(10000); // 10 seconds
+jest.setTimeout(10000); // 10 seconds timeout for each test
 
 describe('Sign-In Endpoint Tests', () => {
   const adminCredentials = {
@@ -32,7 +33,19 @@ describe('Sign-In Endpoint Tests', () => {
     expect(response.body).toHaveProperty('error', 'Invalid credentials'); // Adjust based on your actual error message
   });
 
-  afterAll(done => {
-    server.close(done); // Close the server after tests are complete
+  // Ensure server and database pool are closed after all tests
+  afterAll(async () => {
+    // Close the server
+    await new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+
+    // Close the mssql pool without modifying db.js
+    if (sql.close) {
+      await sql.close(); // Close the pool if it is available
+    }
   });
 });
