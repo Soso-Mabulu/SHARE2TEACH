@@ -1,16 +1,14 @@
-// routes/signup.js
 const express = require('express');
 const bcrypt = require('bcrypt');
 const sql = require('mssql');
-const db = require('../config/db');
+const getPool = require('../config/db');
 const router = express.Router();
 
 router.post('/', async (req, res) => {
   const { userName, userLName, email, password } = req.body;
 
-  let connection;
   try {
-    connection = await db();
+    const pool = await getPool();  // Get the shared pool
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = `
       INSERT INTO [User] (userName, userLName, email, userPassword, userType)
@@ -19,7 +17,7 @@ router.post('/', async (req, res) => {
     
     const defaultUserType = 'public';
 
-    await connection.request()
+    await pool.request()
       .input('userName', sql.VarChar, userName)
       .input('userLName', sql.VarChar, userLName)
       .input('email', sql.VarChar, email)
@@ -31,10 +29,6 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.error('Sign Up Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
-  } finally {
-    if (connection) {
-      await connection.close();
-    }
   }
 });
 

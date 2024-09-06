@@ -1,19 +1,17 @@
-// routes/signin.js
 const express = require('express');
 const bcrypt = require('bcrypt');
 const sql = require('mssql');
-const db = require('../config/db');
+const getPool = require('../config/db');
 const generateToken = require('../utils/jwt');
 const router = express.Router();
 
 router.post('/', async (req, res) => {
   const { email, password } = req.body;
 
-  let connection;
   try {
-    connection = await db();
+    const pool = await getPool();  // Get the shared pool
     const query = 'SELECT * FROM [User] WHERE email = @email';
-    const result = await connection.request()
+    const result = await pool.request()
       .input('email', sql.VarChar, email)
       .query(query);
 
@@ -28,10 +26,6 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.error('Sign In Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
-  } finally {
-    if (connection) {
-      await connection.close();
-    }
   }
 });
 
