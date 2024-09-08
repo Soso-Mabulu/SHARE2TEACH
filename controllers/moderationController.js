@@ -8,7 +8,7 @@ const getPendingDocuments = async (req, res) => {
         const connection = await connectToDatabase();
 
         const query = `
-            SELECT docId, module, description, location, university, category, academicYear, userId 
+            SELECT docId, module, description, location, university, category, academicYear, userId
             FROM DOCUMENT
             WHERE status = 'pending'
         `;
