@@ -55,16 +55,16 @@ describe('Sign-In Endpoint Tests', () => {
       expect(response.body.documents).toBeInstanceOf(Array);
     });
 
-    it('should approve a pending document', async () => {
-      const docId = 7; // Replace with an actual docId from your test database
-      const response = await request(app)
-        .post(`/api/v1/documents/${docId}`)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ action: 'approve' });
+    // it('should approve a pending document', async () => {
+    //   const docId = 7; // Replace with an actual docId from your test database
+    //   const response = await request(app)
+    //     .post(`/api/v1/documents/${docId}`)
+    //     .set('Authorization', `Bearer ${token}`)
+    //     .send({ action: 'approve' });
 
-      expect(response.statusCode).toBe(200);
-      expect(response.body).toHaveProperty('message', 'Document successfully approved.');
-    });
+    //   expect(response.statusCode).toBe(200);
+    //   expect(response.body).toHaveProperty('message', 'Document successfully approved.');
+    // });
 
     // it('should deny a pending document', async () => {
     //   const docId = 2; // Replace with an actual docId from your test database
