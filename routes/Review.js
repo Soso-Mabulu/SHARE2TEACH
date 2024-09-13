@@ -1,24 +1,10 @@
 const express = require('express');
 const { Connection, Request, TYPES } = require('tedious');
 const moment = require('moment-timezone');
+const authorize = require('../middleware/authorize');
 
 const app = express();
 app.use(express.json());
-
-const config = {
-    authentication: {
-        options: {
-            userName: 'username', 
-            password: 'password' 
-        },
-        type: 'default'
-    },
-    server: 'server.database.windows.net', 
-    options: {
-        database: 'our-database', 
-        encrypt: true
-    }
-};
 
 // Middleware for access control
 const verifyModerator = (req, res, next) => {
