@@ -5,7 +5,7 @@ const documentController = require('../controllers/documentController');
 const authorize = require('../middleware/authorize'); 
 
 // Route to get all documents
-router.get('/',authorize(['educator', 'moderator', 'admin', 'public']), documentController.getAllDocuments);
+router.get('/',authorize(['educator', 'moderator', 'admin']), documentController.getAllDocuments);
 
 // Route to get pending documents
 router.get('/pending', documentController.getPendingDocuments);

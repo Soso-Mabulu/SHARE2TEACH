@@ -14,6 +14,8 @@ const moderationRoutes = require('./routes/moderationRoutes');
 const faqRoutes = require('./routes/faq');
 const passwordResetRoutes = require('./routes/passreset');
 const reportedFile = require('./routes/Report.js');
+const documents = require('./routes/documents.js');
+const authRoutes = require('./routes/authRoutes');
 
 // Create express app
 const app = express();
@@ -39,6 +41,8 @@ app.use(`/api/${apiVersion}/documents`, moderationRoutes);
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
 app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
 app.use(`/api/${apiVersion}/report`, reportedFile);
+app.use (`/api/${apiVersion}/documents`, documents);
+app.use(`/api/${apiVersion}/auth`, authRoutes);
 
 
 // Swagger setup
