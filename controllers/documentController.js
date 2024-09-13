@@ -3,13 +3,16 @@
 const sql = require('mssql');
 const connectToDatabase = require('../config/db');
 
-// Get all documents
-// Get all documents with all related details
+//get all documents
 const getAllDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
 
-        const query = `
+        // Get user role from request (assuming it's stored in req.user.role)
+        const userRole = req.user.role; // Update this based on how you store user role in the request
+
+        // Base query to select documents
+        let query = `
             SELECT 
                 d.docId, 
                 d.module, 
@@ -30,6 +33,11 @@ const getAllDocuments = async (req, res) => {
             LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
             LEFT JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
         `;
+
+        // Modify the query based on user role
+        if (userRole === 'public' || userRole === 'educator') {
+            query += ` WHERE d.status = 'approved' `;
+        }
 
         const request = new sql.Request(connection);
         const result = await request.query(query);
