@@ -3,7 +3,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const setupSwagger = require('./routes/swagger');
 
-const authRoutes = require('./routes/auth');
+// Import routes
+const signupRoutes = require('./routes/signup');
+const signinRoutes = require('./routes/signin');
 const protectedRoutes = require('./routes/protected');
 const usersRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/uploadRoutes');
@@ -11,36 +13,24 @@ const searchRoutes = require('./routes/searchDocuments');
 const moderationRoutes = require('./routes/moderationRoutes');
 const faqRoutes = require('./routes/faq');
 const passwordResetRoutes = require('./routes/passreset');
+const reportedFile = require('./routes/Report.js');
 
+// Create express app
 const app = express();
 
-// Use CORS middleware
+// Middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    const allowedOrigins = [
-      'https://example-frontend-domain.com',
-      'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app',
-      'http://localhost:3000',
-      '*'
-    ];
-    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: '*',
   credentials: true,
 }));
-
 app.use(bodyParser.json());
 
+// API routes
 const apiVersion = 'v1';
-
-// Define routes
-app.use(`/api/${apiVersion}/auth`, authRoutes);
+app.use(`/api/${apiVersion}/signup`, signupRoutes);
+app.use(`/api/${apiVersion}/signin`, signinRoutes);
 app.use(`/api/${apiVersion}/protected`, protectedRoutes);
 app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/upload`, uploadRoutes);
@@ -48,11 +38,13 @@ app.use(`/api/${apiVersion}/search`, searchRoutes);
 app.use(`/api/${apiVersion}/documents`, moderationRoutes);
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
 app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
+app.use(`/api/${apiVersion}/report`, reportedFile);
 
-// Setup Swagger documentation
+
+// Swagger setup
 setupSwagger(app);
 
-// Handle requests to the root path
+// Root endpoint
 app.get('/', (req, res) => {
   res.send(`<h1>Welcome to the Share2Teach Backend API</h1>
             <p>Use the appropriate API endpoints to interact with the system.</p>
@@ -66,4 +58,4 @@ const server = app.listen(port, () => {
   console.log(`Swagger UI is available at http://localhost:${port}/api-docs`);
 });
 
-module.exports = { app, server }; // Export both app and server
+module.exports = { app, server };

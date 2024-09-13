@@ -17,7 +17,7 @@ info:
         port:
           default: "3000"
 paths:
-  /api/v1/auth/signup:
+  /api/v1/signup:
     post:
       summary: Register a new user
       tags:
@@ -67,7 +67,7 @@ paths:
         '409':
           description: Conflict, email already exists
 
-  /api/v1/auth/signin:
+  /api/v1/signin:
     post:
       summary: Sign in a user
       tags:
@@ -531,6 +531,50 @@ paths:
           description: Document not found or already moderated.
         '500':
           description: Internal server error.
+
+  /api/v1/report:
+    post:
+      tags:
+        - "File Reporting"
+      summary: "Report a file"
+      description: "Endpoint to report a file by providing file ID, user ID, and report details."
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "body"
+          in: "body"
+          description: "File report details"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              docId:
+                type: "integer"
+                example: 123
+                description: "The document ID being reported."
+              userId:
+                type: "integer"
+                example: 456
+                description: "The user ID reporting the document."
+              report_details:
+                type: "string"
+                example: "Inappropriate content"
+                description: "Details of the report."
+      responses:
+        200:
+          description: "File reported successfully."
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "File reported successfully."
+        400:
+          description: "Invalid input."
+        500:
+          description: "Server error."
 
 
 components:
