@@ -268,7 +268,7 @@ paths:
       summary: Upload a document
       tags:
         - Documents
-      description: Allows educators, moderators, and admins to upload documents. The file is uploaded to Azure Blob Storage, and the metadata is stored in the database. User ID is extracted from the JWT.
+      description: Allows educators, moderators, and admins to upload documents. The file is uploaded and converted to PDF if necessary, and the metadata is extracted.
       security:
         - bearerAuth: []
       requestBody:
@@ -283,7 +283,7 @@ paths:
                   items:
                     type: string
                     format: binary
-                  description: The files to upload. Only PDF files are allowed.
+                  description: The files to upload. Supported formats: PDF, DOCX, XLSX, PPTX.
                 module:
                   type: string
                   description: The module associated with the document.
@@ -306,7 +306,7 @@ paths:
                   example: "2023"
       responses:
         '200':
-          description: Document uploaded successfully and marked as pending.
+          description: Document uploaded and converted successfully, metadata extracted.
           content:
             application/json:
               schema:
@@ -323,12 +323,28 @@ paths:
                         url:
                           type: string
                           example: "https://share2teach.blob.core.windows.net/documents/lecture_notes.pdf"
+                        metadata:
+                          type: object
+                          properties:
+                            pageCount:
+                              type: integer
+                              example: 10
+                            author:
+                              type: string
+                              example: "John Doe"
+                            creationDate:
+                              type: string
+                              example: "2023-01-01T12:00:00Z"
+                            modificationDate:
+                              type: string
+                              example: "2023-01-02T12:00:00Z"
         '400':
           description: Bad request, no files uploaded or invalid data.
         '403':
           description: Forbidden, insufficient privileges.
         '500':
           description: Internal server error.
+
 
   /api/v1/search:
     get:
