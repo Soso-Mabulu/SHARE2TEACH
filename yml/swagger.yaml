@@ -333,7 +333,7 @@ paths:
   /api/v1/search:
     get:
       summary: "Search Documents"
-      description: "Retrieve documents based on search criteria such as module, description, university, category, or academic year."
+      description: "Retrieve documents based on search criteria such as module, description, university, category, or academic year. Public users can only view approved documents, while moderators and admins can search for documents of any status."
       tags:
         - "Documents"
       parameters:
@@ -342,68 +342,80 @@ paths:
           description: "Search term to filter documents by module, description, university, category, or academic year."
           required: false
           schema:
-            type: "string"
+            type: string
+      security:
+        - bearerAuth: []  # Ensures JWT is provided for authentication
       responses:
         "200":
           description: "Successful response with a list of documents matching the search criteria."
           content:
             application/json:
               schema:
-                type: "array"
+                type: array
                 items:
-                  type: "object"
+                  type: object
                   properties:
                     docId:
-                      type: "integer"
+                      type: integer
                       example: 1
                     module:
-                      type: "string"
+                      type: string
                       example: "Computer Science"
                     description:
-                      type: "string"
+                      type: string
                       example: "Introduction to Programming"
                     status:
-                      type: "string"
-                      example: "pending"
+                      type: string
+                      example: "approved"
                     location:
-                      type: "string"
+                      type: string
                       example: "https://example.com/docs/1"
                     university:
-                      type: "string"
+                      type: string
                       example: "North-West University"
                     category:
-                      type: "string"
+                      type: string
                       example: "Lecture Notes"
                     academicYear:
-                      type: "string"
+                      type: string
                       example: "2024"
                     userId:
-                      type: "string"
+                      type: string
                       example: "user123"
+        "403":
+          description: "Forbidden: Insufficient privileges to access documents."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Forbidden: Insufficient privileges."
         "404":
           description: "No documents found matching the search criteria."
           content:
             application/json:
               schema:
-                type: "object"
+                type: object
                 properties:
                   message:
-                    type: "string"
+                    type: string
                     example: "No documents found matching the search criteria."
         "500":
           description: "Internal server error"
           content:
             application/json:
               schema:
-                type: "object"
+                type: object
                 properties:
                   message:
-                    type: "string"
+                    type: string
                     example: "Internal Server Error"
                   error:
-                    type: "string"
+                    type: string
                     example: "Error message details"
-
+                    
   /api/v1/documents/pending:
     get:
       summary: "Get Pending Documents"
