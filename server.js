@@ -13,6 +13,7 @@ const searchRoutes = require('./routes/searchDocuments');
 const moderationRoutes = require('./routes/moderationRoutes');
 const faqRoutes = require('./routes/faq');
 const passwordResetRoutes = require('./routes/passreset');
+const reportedFile = require('./routes/Report.js');
 
 // Create express app
 const app = express();
@@ -37,6 +38,8 @@ app.use(`/api/${apiVersion}/search`, searchRoutes);
 app.use(`/api/${apiVersion}/documents`, moderationRoutes);
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
 app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
+app.use(`/api/${apiVersion}/report`, reportedFile);
+
 
 // Swagger setup
 setupSwagger(app);
