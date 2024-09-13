@@ -9,8 +9,22 @@ const signUp = async (req, res) => {
 
   try {
     const pool = await getPool();
+
+    // Check if the user already exists
+    const checkUserQuery = 'SELECT * FROM [User] WHERE email = @email';
+    const checkUserResult = await pool.request()
+      .input('email', sql.VarChar, email)
+      .query(checkUserQuery);
+
+    if (checkUserResult.recordset.length > 0) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const query = `
+
+    // Insert new user
+    const insertQuery = `
       INSERT INTO [User] (userName, userLName, email, userPassword, userType)
       VALUES (@userName, @userLName, @email, @userPassword, @userType)
     `;
@@ -23,7 +37,7 @@ const signUp = async (req, res) => {
       .input('email', sql.VarChar, email)
       .input('userPassword', sql.VarChar, hashedPassword)
       .input('userType', sql.VarChar, defaultUserType)
-      .query(query);
+      .query(insertQuery);
 
     res.status(201).json({ message: 'User created' });
   } catch (err) {
@@ -56,8 +70,9 @@ const signIn = async (req, res) => {
   }
 };
 
-
+// Logout
 const logout = (req, res) => {
+  // Implement any necessary logout logic, like clearing tokens from storage
   res.status(200).json({ message: 'Logged out successfully' });
 };
 
