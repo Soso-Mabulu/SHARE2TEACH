@@ -223,6 +223,70 @@ const getDocumentById = async (req, res) => {
         res.status(500).json({ message: 'Failed to retrieve document', error: err.message });
     }
 };
+// Search documents with a single textbox input
+const searchDocuments = async (req, res) => {
+    const { search } = req.query;
+
+    if (!search || search.trim() === '') {
+        // Return a message if the search parameter is empty or just whitespace
+        return res.status(400).json({ message: 'Search entry cannot be empty.' });
+    }
+
+    try {
+        const connection = await connectToDatabase();
+
+        // Base query to select documents
+        let query = `
+            SELECT 
+                d.docId, 
+                d.module, 
+                d.description, 
+                d.location, 
+                d.university, 
+                d.category, 
+                d.academicYear, 
+                d.userId AS documentUserId,
+                d.fileName,
+                d.fileType,
+                d.fileSize,
+                d.pageCount,
+                d.author,
+                d.creationDate,
+                d.modificationDate,
+                d.status AS documentStatus,
+                r.userId AS reporterUserId,
+                r.report_details,
+                r.report_timestamp,
+                nd.datetime_of_denial,
+                a.datetime_of_approval
+            FROM DOCUMENT d
+            LEFT JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
+            LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
+            LEFT JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
+            WHERE 
+                d.module LIKE @search OR
+                d.description LIKE @search OR
+                d.university LIKE @search OR
+                d.author LIKE @search OR
+                d.fileName LIKE @search OR
+                r.report_details LIKE @search
+        `;
+
+        const request = new sql.Request(connection);
+        request.input('search', sql.VarChar, `%${search.trim()}%`);
+
+        const result = await request.query(query);
+
+        if (!result.recordset.length) {
+            return res.status(404).json({ message: 'No documents found based on the search criteria.' });
+        }
+
+        res.status(200).json({ status: 'success', documents: result.recordset });
+    } catch (err) {
+        console.error('Error searching documents:', err);
+        res.status(500).json({ message: 'Failed to search documents', error: err.message });
+    }
+};
 
 
 module.exports = {
@@ -231,5 +295,6 @@ module.exports = {
     getReportedDocuments,
     getDeniedDocuments,
     getApprovedDocuments,
-    getDocumentById
+    getDocumentById,
+    searchDocuments
 };
