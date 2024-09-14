@@ -576,6 +576,52 @@ paths:
         500:
           description: "Server error."
 
+  /api/v1/moderation:
+      post:
+        summary: Moderate a document
+        description: Allows a moderator to approve or deny a document. If approved, the document is moved to the APPROVED_DOCUMENT table; if denied, it is moved to the DENIED_DOCUMENT table. Requires moderator role.
+        tags:
+          - Moderation
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: docid
+            required: true
+            schema:
+              type: integer
+              example: 1
+            description: The ID of the document to be moderated.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  action:
+                    type: string
+                    enum: [approve, deny]
+                    description: The action to be taken on the document.
+                    example: "approve"
+                  comment:
+                    type: string
+                    description: An optional comment regarding the moderation decision.
+                    example: "Document meets all the requirements."
+                required:
+                  - action
+        responses:
+          '200':
+            description: Document moderated successfully.
+          '400':
+            description: Bad request, invalid action or docid.
+          '403':
+            description: Forbidden, insufficient privileges.
+          '404':
+            description: Document not found.
+          '500':
+            description: Internal server error.
+
 
 components:
   securitySchemes:

@@ -1,12 +1,10 @@
 const express = require('express');
-const router = express.Router();
+const { moderateFile } = require('../controllers/moderationController');
 const authorize = require('../middleware/authorize');
-const { getPendingDocuments, moderateDocument } = require('../controllers/moderationController');
 
-// Apply the authorization middleware
-router.use(authorize('moderator'));
+const router = express.Router();
 
-router.get('/pending', getPendingDocuments);
-router.post('/:docId', moderateDocument);
+// POST route for moderators to approve/disapprove documents with comments
+router.post('/', authorize(['moderator', 'admin']), moderateFile);
 
 module.exports = router;
