@@ -34,6 +34,7 @@ app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
 app.use(`/api/${apiVersion}/report`, reportedFile);
 app.use (`/api/${apiVersion}/documents`, documents);
 app.use(`/api/${apiVersion}/auth`, authRoutes);
+app.use(`/api/${apiVersion}/moderation`, moderationRoutes);
 
 
 // Swagger setup
