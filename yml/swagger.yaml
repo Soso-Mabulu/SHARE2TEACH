@@ -17,7 +17,7 @@ info:
         port:
           default: "3000"
 paths:
-  /api/v1/signup:
+  /api/v1/auth/signup:
     post:
       summary: Register a new user
       tags:
@@ -67,7 +67,7 @@ paths:
         "409":
           description: Conflict, email already exists
 
-  /api/v1/signin:
+  /api/v1/auth/login:
     post:
       summary: Sign in a user
       tags:
@@ -108,8 +108,8 @@ paths:
                     example: "User signed in successfully"
         "401":
           description: Unauthorized, invalid credentials
-
-  /api/v1/password-reset/password-reset-request:
+  
+  /api/v1/auth/password-reset-request:
     post:
       summary: Request a password reset
       tags:
@@ -144,7 +144,7 @@ paths:
         "404":
           description: Email not found
 
-  /api/v1/password-reset/reset-password:
+  /api/v1/auth/reset-password:
     post:
       summary: Reset password
       tags:
@@ -330,207 +330,287 @@ paths:
         "500":
           description: Internal server error.
 
-  /api/v1/search:
+  /api/v1/documents:
     get:
-      summary: "Search Documents"
-      description: "Retrieve documents based on search criteria such as module, description, university, category, or academic year. Public users can only view approved documents, while moderators and admins can search for documents of any status."
-      tags:
-        - "Documents"
-      parameters:
-        - name: search
-          in: query
-          description: "Search term to filter documents by module, description, university, category, or academic year."
-          required: false
-          schema:
-            type: string
-      security:
-        - bearerAuth: [] # Ensures JWT is provided for authentication
-      responses:
-        "200":
-          description: "Successful response with a list of documents matching the search criteria."
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    docId:
-                      type: integer
-                      example: 1
-                    module:
-                      type: string
-                      example: "Computer Science"
-                    description:
-                      type: string
-                      example: "Introduction to Programming"
-                    status:
-                      type: string
-                      example: "approved"
-                    location:
-                      type: string
-                      example: "https://example.com/docs/1"
-                    university:
-                      type: string
-                      example: "North-West University"
-                    category:
-                      type: string
-                      example: "Lecture Notes"
-                    academicYear:
-                      type: string
-                      example: "2024"
-                    userId:
-                      type: string
-                      example: "user123"
-        "403":
-          description: "Forbidden: Insufficient privileges to access documents."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Forbidden: Insufficient privileges."
-        "404":
-          description: "No documents found matching the search criteria."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "No documents found matching the search criteria."
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Internal Server Error"
-                  error:
-                    type: string
-                    example: "Error message details"
-
-  /api/v1/documents/pending:
-    get:
-      summary: "Get Pending Documents"
-      description: "Retrieve a list of documents with a status of 'pending'."
-      tags:
-        - "Documents"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: "Successful response with a list of pending documents."
-          schema:
-            type: "object"
-            properties:
-              status:
-                type: "string"
-                example: "success"
-              documents:
-                type: "array"
-                items:
-                  type: "object"
-                  properties:
-                    docId:
-                      type: "integer"
-                      example: 1
-                    module:
-                      type: "string"
-                      example: "Computer Science"
-                    description:
-                      type: "string"
-                      example: "Introduction to Programming"
-                    location:
-                      type: "string"
-                      example: "https://example.com/docs/1"
-                    university:
-                      type: "string"
-                      example: "North-West University"
-                    category:
-                      type: "string"
-                      example: "Lecture Notes"
-                    academicYear:
-                      type: "string"
-                      example: "2024"
-                    userId:
-                      type: "string"
-                      example: "user123"
-        "404":
-          description: "No pending documents found."
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "No pending documents found."
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "Internal Server Error"
-                  error:
-                    type: "string"
-                    example: "Error message details"
-
-  /api/v1/documents/{docId}:
-    post:
-      summary: Moderate a document (approve or deny)
-      description: "Allows a moderator to approve or deny a document. When approved, the document is moved to the APPROVED_DOCUMENT table. When denied, it's moved to the DENIED_DOCUMENT table."
+      summary: Get all documents
+      description: Retrieve a list of all documents based on the user's role.
       tags:
         - Documents
       security:
         - bearerAuth: []
+      responses:
+        '200':
+          description: A list of documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No documents found.
+        '500':
+          description: Failed to retrieve documents.
+
+  /api/v1/documents/pending:
+    get:
+      summary: Get pending documents
+      description: Retrieve a list of all pending documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of pending documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No pending documents found.
+        '500':
+          description: Failed to retrieve pending documents.
+
+  /api/v1/documents/reported:
+    get:
+      summary: Get reported documents
+      description: Retrieve a list of all reported documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of reported documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No reported documents found.
+        '500':
+          description: Failed to retrieve reported documents.
+
+  /api/v1/documents/approved:
+    get:
+      summary: Get approved documents
+      description: Retrieve a list of all approved documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of approved documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No approved documents found.
+        '500':
+          description: Failed to retrieve approved documents.
+
+  /api/v1/documents/denied:
+    get:
+      summary: Get denied documents
+      description: Retrieve a list of all denied documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of denied documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No denied documents found.
+        '500':
+          description: Failed to retrieve denied documents.
+
+  /api/v1/documents/{docId}:
+    get:
+      summary: Get document by ID
+      description: Retrieve a document by its ID.
+      tags:
+        - Documents
       parameters:
         - in: path
           name: docId
           required: true
           schema:
-            type: integer
-            example: 1
-          description: "The ID of the document to be moderated."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                action:
-                  type: string
-                  enum: [approve, deny]
-                  example: approve
-                  description: "Action to be taken on the document."
+            type: string
+            example: "12345"
+      security:
+        - bearerAuth: []
       responses:
-        "200":
-          description: Document successfully moderated.
+        '200':
+          description: Document details.
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  status:
+                    type: string
+                    example: success
+                  document:
+                    $ref: '#/components/schemas/Document'
+        '404':
+          description: Document not found.
+        '500':
+          description: Failed to retrieve document.
+
+  /api/v1/documents/{docId}/approve:
+    post:
+      summary: Approve a document
+      description: Approve a pending document. Requires admin or moderator role.
+      tags:
+        - Documents
+      parameters:
+        - in: path
+          name: docId
+          required: true
+          schema:
+            type: string
+            example: "12345"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Document approved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
                   message:
                     type: string
-                    example: "Document successfully approved."
-        "400":
-          description: Invalid action or missing parameters.
-        "404":
-          description: Document not found or already moderated.
-        "500":
-          description: Internal server error.
+                    example: Document approved successfully
+        '400':
+          description: Bad request, invalid document ID.
+        '403':
+          description: Forbidden, insufficient privileges.
+        '404':
+          description: Document not found.
+        '500':
+          description: Failed to approve document.
+
+  /api/v1/documents/{docId}/deny:
+    post:
+      summary: Deny a document
+      description: Deny a pending document. Requires admin or moderator role.
+      tags:
+        - Documents
+      parameters:
+        - in: path
+          name: docId
+          required: true
+          schema:
+            type: string
+            example: "12345"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Document denied successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Document denied successfully
+        '400':
+          description: Bad request, invalid document ID.
+        '403':
+          description: Forbidden, insufficient privileges.
+        '404':
+          description: Document not found.
+        '500':
+          description: Failed to deny document.
+
+  /api/v1/search:
+    get:
+      summary: Search documents
+      description: Search for documents based on a single search term. Accessible to all users.
+      tags:
+        - Documents
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+            example: "cloud computing"
+      responses:
+        '200':
+          description: Search results.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '400':
+          description: Bad request, invalid query.
+        '500':
+          description: Failed to perform search.
 
   /api/v1/report:
     post:
@@ -576,368 +656,51 @@ paths:
         500:
           description: "Server error."
 
-  /api/v1/fileRating:
-    post:
-      summary: Rate a file
-      description: "Endpoint to rate a file by providing file ID, user ID, and rating."
-      tags:
-        - File Rating
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
+  /api/v1/moderation:
+      post:
+        summary: Moderate a document
+        description: Allows a moderator to approve or deny a document. If approved, the document is moved to the APPROVED_DOCUMENT table; if denied, it is moved to the DENIED_DOCUMENT table. Requires moderator role.
+        tags:
+          - Moderation
+        security:
+          - bearerAuth: []
+        parameters:
+          - in: path
+            name: docid
+            required: true
             schema:
-              type: object
-              properties:
-                docId:
-                  type: integer
-                  example: 123
-                  description: "The document ID being rated."
-                userId:
-                  type: integer
-                  example: 456
-                  description: "The user ID rating the document."
-                rating:
-                  type: integer
-                  example: 4
-                  description: "The rating given to the document (0-5)."
-      responses:
-        "200":
-          description: Rating added successfully.
+              type: integer
+              example: 1
+            description: The ID of the document to be moderated.
+        requestBody:
+          required: true
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  message:
+                  action:
                     type: string
-                    example: "Rating added successfully."
-        "400":
-          description: Invalid input or rating already exists.
-        "500":
-          description: Server error.
-
-    get:
-      summary: Get all ratings
-      description: "Endpoint to retrieve all ratings, authorized for admins."
-      tags:
-        - File Rating
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: A list of all ratings.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    docId:
-                      type: integer
-                      example: 123
-                      description: "The document ID."
-                    userId:
-                      type: integer
-                      example: 456
-                      description: "The user ID."
-                    rating:
-                      type: integer
-                      example: 4
-                      description: "The rating given to the document."
-        "500":
-          description: Server error.
-
-  /api/v1/faq/:
-    get:
-      summary: Get all FAQs
-      description: "Retrieve all FAQs, accessible by both public access users and admins."
-      tags:
-        - FAQ
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: A list of all FAQs.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    faqId:
-                      type: integer
-                      example: 1
-                      description: "The FAQ ID."
-                    question:
-                      type: string
-                      example: "What is Share2Teach?"
-                      description: "The FAQ question."
-                    answer:
-                      type: string
-                      example: "Share2Teach is a platform for sharing educational resources."
-                      description: "The FAQ answer."
-        "500":
-          description: Server error.
-
-  /api/v1/faq/search/term:
-    get:
-      summary: Search FAQs
-      description: "Search FAQs by term, accessible by both public access users and admins."
-      tags:
-        - FAQ
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: term
-          required: true
-          schema:
-            type: string
-            example: "Share2Teach"
-          description: "The search term."
-      responses:
-        "200":
-          description: A list of FAQs matching the search term.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    faqId:
-                      type: integer
-                      example: 1
-                      description: "The FAQ ID."
-                    question:
-                      type: string
-                      example: "What is Share2Teach?"
-                      description: "The FAQ question."
-                    answer:
-                      type: string
-                      example: "Share2Teach is a platform for sharing educational resources."
-                      description: "The FAQ answer."
-        "500":
-          description: Server error.
-
-  /api/v1/faq/faqId:
-    get:
-      summary: Get a single FAQ by ID
-      description: "Retrieve a single FAQ by ID, accessible by both public access users and admins."
-      tags:
-        - FAQ
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: faqId
-          required: true
-          schema:
-            type: integer
-            example: 1
-          description: "The ID of the FAQ to retrieve."
-      responses:
-        "200":
-          description: The requested FAQ.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  faqId:
-                    type: integer
-                    example: 1
-                    description: "The FAQ ID."
-                  question:
+                    enum: [approve, deny]
+                    description: The action to be taken on the document.
+                    example: "approve"
+                  comment:
                     type: string
-                    example: "What is Share2Teach?"
-                    description: "The FAQ question."
-                  answer:
-                    type: string
-                    example: "Share2Teach is a platform for sharing educational resources."
-                    description: "The FAQ answer."
-        "404":
-          description: FAQ not found.
-        "500":
-          description: Server error.
-
-    put:
-      summary: Update an FAQ
-      description: "Update an FAQ by ID, accessible by admins only."
-      tags:
-        - FAQ
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: faqId
-          required: true
-          schema:
-            type: integer
-            example: 1
-          description: "The ID of the FAQ to update."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                question:
-                  type: string
-                  example: "What is Share2Teach?"
-                  description: "The updated FAQ question."
-                answer:
-                  type: string
-                  example: "Share2Teach is a platform for sharing educational resources."
-                  description: "The updated FAQ answer."
-      responses:
-        "200":
-          description: FAQ updated successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  faqId:
-                    type: integer
-                    example: 1
-                    description: "The FAQ ID."
-                  question:
-                    type: string
-                    example: "What is Share2Teach?"
-                    description: "The updated FAQ question."
-                  answer:
-                    type: string
-                    example: "Share2Teach is a platform for sharing educational resources."
-                    description: "The updated FAQ answer."
-        "404":
-          description: FAQ not found.
-        "500":
-          description: Server error.
-
-    delete:
-      summary: Delete an FAQ
-      description: "Delete an FAQ by ID, accessible by admins only."
-      tags:
-        - FAQ
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: faqId
-          required: true
-          schema:
-            type: integer
-            example: 1
-          description: "The ID of the FAQ to delete."
-      responses:
-        "204":
-          description: FAQ deleted successfully.
-        "404":
-          description: FAQ not found.
-        "500":
-          description: Server error.
-
-  /api/v1/faq/:
-    post:
-      summary: Create a new FAQ
-      description: "Create a new FAQ, accessible by admins only."
-      tags:
-        - FAQ
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                question:
-                  type: string
-                  example: "What is Share2Teach?"
-                  description: "The FAQ question."
-                answer:
-                  type: string
-                  example: "Share2Teach is a platform for sharing educational resources."
-                  description: "The FAQ answer."
-      responses:
-        "201":
-          description: FAQ created successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  faqId:
-                    type: integer
-                    example: 1
-                    description: "The FAQ ID."
-                  question:
-                    type: string
-                    example: "What is Share2Teach?"
-                    description: "The FAQ question."
-                  answer:
-                    type: string
-                    example: "Share2Teach is a platform for sharing educational resources."
-                    description: "The FAQ answer."
-        "500":
-          description: Server error.
-
-  /api/v1/faq/rating/faqId:
-    post:
-      summary: Rate an FAQ
-      description: "Rate an FAQ by providing FAQ ID, user ID, and rating, accessible by public access users."
-      tags:
-        - FAQ
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: faqId
-          required: true
-          schema:
-            type: integer
-            example: 1
-          description: "The ID of the FAQ to rate."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: integer
-                  example: 456
-                  description: "The user ID rating the FAQ."
-                rating:
-                  type: integer
-                  example: 4
-                  description: "The rating given to the FAQ (0-5)."
-      responses:
-        "200":
-          description: Rating submitted successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Rating submitted successfully."
-        "400":
-          description: Invalid input or rating already exists."
-        "404":
-          description: FAQ or user not found."
-        "500":
-          description: Server error."
+                    description: An optional comment regarding the moderation decision.
+                    example: "Document meets all the requirements."
+                required:
+                  - action
+        responses:
+          '200':
+            description: Document moderated successfully.
+          '400':
+            description: Bad request, invalid action or docid.
+          '403':
+            description: Forbidden, insufficient privileges.
+          '404':
+            description: Document not found.
+          '500':
+            description: Internal server error.
 
 components:
   securitySchemes:
@@ -945,3 +708,75 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    Document:
+      type: object
+      properties:
+        docId:
+          type: integer
+          example: 123
+        module:
+          type: string
+          example: Mathematics
+        description:
+          type: string
+          example: "An introduction to algebra"
+        location:
+          type: string
+          example: "Room 101"
+        university:
+          type: string
+          example: "University of Example"
+        category:
+          type: string
+          example: "Math"
+        academicYear:
+          type: string
+          example: "2023/2024"
+        documentUserId:
+          type: integer
+          example: 567
+        fileName:
+          type: string
+          example: "algebra_101.pdf"
+        fileType:
+          type: string
+          example: "pdf"
+        fileSize:
+          type: string
+          example: "2MB"
+        pageCount:
+          type: integer
+          example: 45
+        author:
+          type: string
+          example: "John Doe"
+        creationDate:
+          type: string
+          format: date-time
+          example: "2023-05-12T08:40:00Z"
+        modificationDate:
+          type: string
+          format: date-time
+          example: "2023-06-01T08:40:00Z"
+        documentStatus:
+          type: string
+          example: "approved"
+        datetime_of_approval:
+          type: string
+          format: date-time
+          example: "2023-06-02T09:00:00Z"
+        datetime_of_denial:
+          type: string
+          format: date-time
+          example: "2023-06-03T09:00:00Z"
+        reporterUserId:
+          type: integer
+          example: 789
+        report_details:
+          type: string
+          example: "Inappropriate content"
+        report_timestamp:
+          type: string
+          format: date-time
+          example: "2023-06-01T10:15:00Z"

@@ -14,7 +14,7 @@ describe('Sign-In Endpoint Tests', () => {
 
   beforeAll(async () => {
     const response = await request(app)
-      .post('/api/v1/signin')  // Ensure this matches your route
+      .post('/api/v1/auth/login')  // Ensure this matches your route
       .send(adminCredentials);
 
     // Check if sign-in was successful
@@ -25,7 +25,7 @@ describe('Sign-In Endpoint Tests', () => {
 
   it('should return a token when valid credentials are provided', async () => {
     const response = await request(app)
-      .post('/api/v1/signin')  // Ensure this matches your route
+      .post('/api/v1/auth/login')  // Ensure this matches your route
       .send(adminCredentials);
 
     expect(response.statusCode).toBe(200);  // Expect success
@@ -39,7 +39,7 @@ describe('Sign-In Endpoint Tests', () => {
     };
 
     const response = await request(app)
-      .post('/api/v1/signin')  // Ensure this matches your route
+      .post('/api/v1/auth/login')  // Ensure this matches your route
       .send(invalidCredentials);
 
     expect(response.statusCode).toBe(401);  // Expect unauthorized
@@ -58,7 +58,7 @@ describe('Moderation Endpoint Tests', () => {
     };
 
     const response = await request(app)
-      .post('/api/v1/signin')  // Ensure this matches your route
+      .post('/api/v1/auth/login')  // Ensure this matches your route
       .send(adminCredentials);
 
     expect(response.statusCode).toBe(200);

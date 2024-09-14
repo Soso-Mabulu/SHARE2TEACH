@@ -1,14 +1,84 @@
-const express = require('express');
+const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const bcrypt = require('bcrypt');
 const sql = require('mssql');
 const getPool = require('../config/db');
+const generateToken = require('../utils/jwt');
 
-const router = express.Router();
+// User Sign-Up
+const signUp = async (req, res) => {
+  const { userName, userLName, email, password } = req.body;
 
-// Request password reset
-router.post('/password-reset-request', async (req, res) => {
+  try {
+    const pool = await getPool();
+
+    // Check if the user already exists
+    const checkUserQuery = 'SELECT * FROM [User] WHERE email = @email';
+    const checkUserResult = await pool.request()
+      .input('email', sql.VarChar, email)
+      .query(checkUserQuery);
+
+    if (checkUserResult.recordset.length > 0) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert new user
+    const insertQuery = `
+      INSERT INTO [User] (userName, userLName, email, userPassword, userType)
+      VALUES (@userName, @userLName, @email, @userPassword, @userType)
+    `;
+
+    const defaultUserType = 'public';
+
+    await pool.request()
+      .input('userName', sql.VarChar, userName)
+      .input('userLName', sql.VarChar, userLName)
+      .input('email', sql.VarChar, email)
+      .input('userPassword', sql.VarChar, hashedPassword)
+      .input('userType', sql.VarChar, defaultUserType)
+      .query(insertQuery);
+
+    res.status(201).json({ message: 'User created' });
+  } catch (err) {
+    console.error('Sign Up Error:', err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  }
+};
+
+// User Sign-In
+const signIn = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const pool = await getPool();
+    const query = 'SELECT * FROM [User] WHERE email = @email';
+    const result = await pool.request()
+      .input('email', sql.VarChar, email)
+      .query(query);
+
+    const user = result.recordset[0];
+    if (!user || !(await bcrypt.compare(password, user.userPassword))) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = generateToken(user);
+    res.json({ token });
+  } catch (err) {
+    console.error('Sign In Error:', err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+  }
+};
+
+// Logout
+const logout = (req, res) => {
+  res.status(200).json({ message: 'Logged out successfully' });
+};
+
+// Request Password Reset
+const requestPasswordReset = async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -58,10 +128,10 @@ router.post('/password-reset-request', async (req, res) => {
     console.error('Request Password Reset Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
-});
+};
 
-// Reset password
-router.post('/reset-password', async (req, res) => {
+// Reset Password
+const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
 
   try {
@@ -96,6 +166,12 @@ router.post('/reset-password', async (req, res) => {
     console.error('Reset Password Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
   }
-});
+};
 
-module.exports = router;
+module.exports = {
+  signUp,
+  signIn,
+  logout,
+  requestPasswordReset,
+  resetPassword,
+};
