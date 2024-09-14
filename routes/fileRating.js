@@ -1,44 +1,74 @@
 const express = require('express');
 const router = express.Router();
-const connectToDatabase = require('../config/db'); 
+const connect = require('../config/db');
+const sql = require('mssql');
+const authorize = require('../middleware/authorize');
 
-// Endpoint to submit a rating
-router.post('/rate', async (req, res) => {
-    const { userId, docId, rating } = req.body;
-
+// Route to rate a document, authorized for users
+router.post('/rate', authorize('public access user'), async (req, res) => {
+    const { docId, userId, rating } = req.body;
+   
+    // Validate the rating
     if (rating < 0 || rating > 5) {
-        return res.status(400).send('Invalid rating value');
+      return res.status(400).send('Rating must be between 0 and 5');
     }
 
     try {
-        const pool = await connectToDatabase();// Ensure the pool is connected
-        const request = pool.request();
-        const result = await request.query(`SELECT * FROM RATING WHERE userId = '${userId}' AND docId = '${docId}'`);
-        if (result.recordset.length > 0) {
-            return res.status(400).send('User has already rated this file');
-        }
-
-        await pool.query(`INSERT INTO RATING (userId, docId, rating) VALUES ('${userId}', '${docId}', ${rating})`);
-        res.status(200).send('Rating submitted successfully');
+      const pool = await connect();
+  
+      // Check if the document exists
+      const docResult = await pool.request()
+        .input('docId', sql.Int, docId)
+        .query('SELECT * FROM APPROVED_DOCUMENT WHERE docId = @docId');
+  
+      if (docResult.recordset.length === 0) {
+        return res.status(400).send('Document not found');
+      }
+  
+      // Check if the user has already rated the document
+      const ratingResult = await pool.request()
+        .input('docId', sql.Int, docId)
+        .input('userId', sql.Int, userId)
+        .query('SELECT * FROM RATING WHERE docId = @docId AND userId = @userId');
+  
+      if (ratingResult.recordset.length > 0) {
+        return res.status(400).send('You cannot rate the same document more than once');
+      }
+  
+      // Insert the rating in the RATING table
+      await pool.request()
+        .input('docId', sql.Int, docId)
+        .input('userId', sql.Int, userId)
+        .input('rating', sql.Int, rating)
+        .query('INSERT INTO RATING (docId, userId, rating) VALUES (@docId, @userId, @rating)');
+  
+      // Update the average rating in the AVERAGE_RATING table
+      await pool.request()
+        .input('docId', sql.Int, docId)
+        .query('MERGE AVERAGE_RATING AS target ' +
+               'USING (SELECT docId, ROUND(AVG(rating), 2) AS averageRating FROM RATING WHERE docId = @docId GROUP BY docId) AS source ' +
+               'ON (target.docId = source.docId) ' +
+               'WHEN MATCHED THEN ' +
+               'UPDATE SET averageRating = source.averageRating ' +
+               'WHEN NOT MATCHED THEN ' +
+               'INSERT (docId, averageRating) VALUES (source.docId, source.averageRating);');
+  
+      res.status(200).send('Rating added successfully');
     } catch (err) {
-        console.error('Error submitting rating: ', err);
-        res.status(500).send('Server error');
+      console.error('Database error:', err);
+      res.status(500).send('An error occurred');
     }
 });
 
-// Endpoint to retrieve average rating for a file
-router.get('/ratings/:docId', async (req, res) => {
-    const { docId } = req.params;
-
+// Route to get all ratings, authorized for admins
+router.get('/', authorize('admin'), async (req, res) => {
     try {
-        // Ensure the pool is connected
-        const pool = await connectToDatabase();
-        const request = pool.request();
-        const result = await request.query(`SELECT AVG(rating) as averageRating FROM RATING WHERE docId = '${docId}'`);
-        res.status(200).json(result.recordset[0]);
+      const pool = await connect();
+      const result = await pool.request().query('SELECT * FROM RATING');
+      res.json(result.recordset);
     } catch (err) {
-        console.error('Error retrieving ratings: ', err);
-        res.status(500).send('Server error');
+      console.error('Database error:', err);
+      res.status(500).send(err);
     }
 });
 
