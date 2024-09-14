@@ -572,9 +572,287 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Rating added successfully"
-        '400':
-          description: Bad request, invalid data or duplicate rating
+                    example: "Rating added successfully."
+        "400":
+          description: Invalid input or rating already exists.
+        "500":
+          description: Server error.
+
+    get:
+      summary: Get all ratings
+      description: "Endpoint to retrieve all ratings, authorized for admins."
+      tags:
+        - File Rating
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: A list of all ratings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    docId:
+                      type: integer
+                      example: 123
+                      description: "The document ID."
+                    userId:
+                      type: integer
+                      example: 456
+                      description: "The user ID."
+                    rating:
+                      type: integer
+                      example: 4
+                      description: "The rating given to the document."
+        "500":
+          description: Server error.
+
+  /api/v1/faq/:
+    get:
+      summary: Get all FAQs
+      description: "Retrieve all FAQs, accessible by both public access users and admins."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: A list of all FAQs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    faqId:
+                      type: integer
+                      example: 1
+                      description: "The FAQ ID."
+                    question:
+                      type: string
+                      example: "What is Share2Teach?"
+                      description: "The FAQ question."
+                    answer:
+                      type: string
+                      example: "Share2Teach is a platform for sharing educational resources."
+                      description: "The FAQ answer."
+        "500":
+          description: Server error.
+
+  /api/v1/faq/search/term:
+    get:
+      summary: Search FAQs
+      description: "Search FAQs by a term in the question or answer. Accessible by both public access users and admins."
+      tags:
+        - FAQ
+      parameters:
+        - in: path
+          name: term
+          required: true
+          schema:
+            type: string
+            example: "Share2Teach"
+          description: "The search term."
+      responses:
+        "200":
+          description: A list of FAQs matching the search term.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    faqId:
+                      type: integer
+                      example: 1
+                      description: "The FAQ ID."
+                    question:
+                      type: string
+                      example: "What is Share2Teach?"
+                      description: "The FAQ question."
+                    answer:
+                      type: string
+                      example: "Share2Teach is a platform for sharing educational resources."
+                      description: "The FAQ answer."
+        "500":
+          description: Server error.
+
+  /api/v1/faq/update/faqId:
+    put:
+      summary: Update an FAQ
+      description: "Update an FAQ by its ID. This operation is accessible only by admins."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: faqId
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: "The ID of the FAQ to update."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+                - answer
+              properties:
+                question:
+                  type: string
+                  example: "What is Share2Teach?"
+                  description: "The updated FAQ question."
+                answer:
+                  type: string
+                  example: "Share2Teach is a platform for sharing educational resources."
+                  description: "The updated FAQ answer."
+      responses:
+        "200":
+          description: FAQ updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  faqId:
+                    type: integer
+                    example: 1
+                    description: "The FAQ ID."
+                  question:
+                    type: string
+                    example: "What is Share2Teach?"
+                    description: "The updated FAQ question."
+                  answer:
+                    type: string
+                    example: "Share2Teach is a platform for sharing educational resources."
+                    description: "The updated FAQ answer."
+        "404":
+          description: FAQ not found.
+        "500":
+          description: Server error.
+
+  /api/v1/faq/delete/faqId:
+    delete:
+      summary: Delete an FAQ
+      description: "Delete an FAQ by its ID. This operation is accessible only by admins."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: faqId
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: "The ID of the FAQ to delete."
+      responses:
+        "204":
+          description: FAQ deleted successfully. No content is returned.
+        "404":
+          description: FAQ not found.
+        "500":
+          description: Server error.
+
+  /api/v1/faq/newfaq:
+    post:
+      summary: Create a new FAQ
+      description: "Create a new FAQ. This operation is accessible only by admins."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: "Data needed to create a new FAQ."
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+                - answer
+              properties:
+                question:
+                  type: string
+                  example: "What is Share2Teach?"
+                  description: "The FAQ question."
+                answer:
+                  type: string
+                  example: "Share2Teach is a platform for sharing educational resources."
+                  description: "The FAQ answer."
+      responses:
+        "201":
+          description: "FAQ created successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  faqId:
+                    type: integer
+                    example: 1
+                    description: "The ID of the newly created FAQ."
+                  question:
+                    type: string
+                    example: "What is Share2Teach?"
+                    description: "The question of the newly created FAQ."
+                  answer:
+                    type: string
+                    example: "Share2Teach is a platform for sharing educational resources."
+                    description: "The answer of the newly created FAQ."
+        "400":
+          description: Bad request. Validation error or missing required fields.
+        "500":
+          description: Internal server error.
+
+  /api/v1/faq/rating/faqId:
+    post:
+      summary: Rate an FAQ
+      description: "Rate an FAQ by providing the FAQ ID, user ID, and rating. Accessible by public access users."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: faqId
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: "The ID of the FAQ to rate."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  example: 456
+                  description: "The user ID rating the FAQ."
+                rating:
+                  type: integer
+                  example: 4
+                  minimum: 0
+                  maximum: 5
+                  description: "The rating given to the FAQ (0-5)."
+      responses:
+        "200":
+          description: Rating submitted successfully.
           content:
             application/json:
               schema:
@@ -582,17 +860,14 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Invalid data or duplicate rating"
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Internal server error"
+                    example: "Rating submitted successfully."
+        "400":
+          description: "Invalid input or rating already exists. Rating must be between 0 and 5."
+        "404":
+          description: "FAQ or user not found."
+        "500":
+          description: "Server error."
+
 components:
   securitySchemes:
     bearerAuth:
