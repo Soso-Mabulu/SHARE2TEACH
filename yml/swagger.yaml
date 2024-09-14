@@ -52,7 +52,7 @@ paths:
                 - email
                 - password
       responses:
-        '201':
+        "201":
           description: User registered successfully
           content:
             application/json:
@@ -62,9 +62,9 @@ paths:
                   message:
                     type: string
                     example: "User registered successfully"
-        '400':
+        "400":
           description: Bad request, invalid data
-        '409':
+        "409":
           description: Conflict, email already exists
 
   /api/v1/signin:
@@ -92,7 +92,7 @@ paths:
                 - email
                 - password
       responses:
-        '200':
+        "200":
           description: User authenticated successfully
           content:
             application/json:
@@ -106,9 +106,9 @@ paths:
                   message:
                     type: string
                     example: "User signed in successfully"
-        '401':
+        "401":
           description: Unauthorized, invalid credentials
-  
+
   /api/v1/password-reset/password-reset-request:
     post:
       summary: Request a password reset
@@ -129,7 +129,7 @@ paths:
               required:
                 - email
       responses:
-        '200':
+        "200":
           description: Password reset email sent successfully
           content:
             application/json:
@@ -139,9 +139,9 @@ paths:
                   message:
                     type: string
                     example: "Password reset email sent"
-        '400':
+        "400":
           description: Bad request, invalid email
-        '404':
+        "404":
           description: Email not found
 
   /api/v1/password-reset/reset-password:
@@ -169,7 +169,7 @@ paths:
                 - token
                 - newPassword
       responses:
-        '200':
+        "200":
           description: Password reset successfully
           content:
             application/json:
@@ -179,11 +179,11 @@ paths:
                   message:
                     type: string
                     example: "Password has been reset successfully"
-        '400':
+        "400":
           description: Bad request, invalid token or password
-        '404':
+        "404":
           description: Token or user not found
-        '500':
+        "500":
           description: Internal server error
 
   /api/v1/users:
@@ -195,7 +195,7 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: A list of users
           content:
             application/json:
@@ -221,9 +221,9 @@ paths:
                       username: "John"
                       email: "john.doe@example.com"
                       role: "admin"
-        '401':
+        "401":
           description: Unauthorized, no or invalid token
-        '403':
+        "403":
           description: Forbidden, insufficient privileges
 
   /api/v1/users/{userId}:
@@ -254,13 +254,13 @@ paths:
                   example: "moderator"
                   description: The new role for the user.
       responses:
-        '200':
+        "200":
           description: User type updated successfully
-        '400':
+        "400":
           description: Invalid userId or userType provided
-        '404':
+        "404":
           description: User not found
-        '500':
+        "500":
           description: Internal server error
 
   /api/v1/upload:
@@ -305,7 +305,7 @@ paths:
                   description: The academic year for the document.
                   example: "2023"
       responses:
-        '200':
+        "200":
           description: Document uploaded successfully and marked as pending.
           content:
             application/json:
@@ -323,11 +323,11 @@ paths:
                         url:
                           type: string
                           example: "https://share2teach.blob.core.windows.net/documents/lecture_notes.pdf"
-        '400':
+        "400":
           description: Bad request, no files uploaded or invalid data.
-        '403':
+        "403":
           description: Forbidden, insufficient privileges.
-        '500':
+        "500":
           description: Internal server error.
 
   /api/v1/search:
@@ -344,7 +344,7 @@ paths:
           schema:
             type: string
       security:
-        - bearerAuth: []  # Ensures JWT is provided for authentication
+        - bearerAuth: [] # Ensures JWT is provided for authentication
       responses:
         "200":
           description: "Successful response with a list of documents matching the search criteria."
@@ -415,7 +415,7 @@ paths:
                   error:
                     type: string
                     example: "Error message details"
-                    
+
   /api/v1/documents/pending:
     get:
       summary: "Get Pending Documents"
@@ -515,7 +515,7 @@ paths:
                   example: approve
                   description: "Action to be taken on the document."
       responses:
-        '200':
+        "200":
           description: Document successfully moderated.
           content:
             application/json:
@@ -525,14 +525,74 @@ paths:
                   message:
                     type: string
                     example: "Document successfully approved."
-        '400':
+        "400":
           description: Invalid action or missing parameters.
-        '404':
+        "404":
           description: Document not found or already moderated.
-        '500':
+        "500":
           description: Internal server error.
 
-
+paths:
+  /fileRating/rate:
+    post:
+      summary: Rate a document
+      tags:
+        - Ratings
+      description: Allows a user to rate a document.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                docId:
+                  type: integer
+                  description: The ID of the document.
+                  example: 1
+                userId:
+                  type: integer
+                  description: The ID of the user.
+                  example: 123
+                rating:
+                  type: integer
+                  description: Rating value (0-5).
+                  example: 4
+              required:
+                - docId
+                - userId
+                - rating
+      responses:
+        '200':
+          description: Rating added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Rating added successfully"
+        '400':
+          description: Bad request, invalid data or duplicate rating
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid data or duplicate rating"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Internal server error"
 components:
   securitySchemes:
     bearerAuth:

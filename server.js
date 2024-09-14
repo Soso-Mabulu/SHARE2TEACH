@@ -12,6 +12,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const searchRoutes = require('./routes/searchDocuments');
 const moderationRoutes = require('./routes/moderationRoutes');
 const faqRoutes = require('./routes/faq');
+const fileRating = require('./routes/fileRating');
 const passwordResetRoutes = require('./routes/passreset');
 
 // Create express app
@@ -36,6 +37,7 @@ app.use(`/api/${apiVersion}/upload`, uploadRoutes);
 app.use(`/api/${apiVersion}/search`, searchRoutes);
 app.use(`/api/${apiVersion}/documents`, moderationRoutes);
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
+app.use(`/api/${apiVersion}/fileRating`, fileRating);
 app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
 
 // Swagger setup
