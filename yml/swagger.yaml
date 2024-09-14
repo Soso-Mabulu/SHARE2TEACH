@@ -330,207 +330,287 @@ paths:
         '500':
           description: Internal server error.
 
-  /api/v1/search:
+  /api/v1/documents:
     get:
-      summary: "Search Documents"
-      description: "Retrieve documents based on search criteria such as module, description, university, category, or academic year. Public users can only view approved documents, while moderators and admins can search for documents of any status."
-      tags:
-        - "Documents"
-      parameters:
-        - name: search
-          in: query
-          description: "Search term to filter documents by module, description, university, category, or academic year."
-          required: false
-          schema:
-            type: string
-      security:
-        - bearerAuth: []  # Ensures JWT is provided for authentication
-      responses:
-        "200":
-          description: "Successful response with a list of documents matching the search criteria."
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    docId:
-                      type: integer
-                      example: 1
-                    module:
-                      type: string
-                      example: "Computer Science"
-                    description:
-                      type: string
-                      example: "Introduction to Programming"
-                    status:
-                      type: string
-                      example: "approved"
-                    location:
-                      type: string
-                      example: "https://example.com/docs/1"
-                    university:
-                      type: string
-                      example: "North-West University"
-                    category:
-                      type: string
-                      example: "Lecture Notes"
-                    academicYear:
-                      type: string
-                      example: "2024"
-                    userId:
-                      type: string
-                      example: "user123"
-        "403":
-          description: "Forbidden: Insufficient privileges to access documents."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Forbidden: Insufficient privileges."
-        "404":
-          description: "No documents found matching the search criteria."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "No documents found matching the search criteria."
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Internal Server Error"
-                  error:
-                    type: string
-                    example: "Error message details"
-                    
-  /api/v1/documents/pending:
-    get:
-      summary: "Get Pending Documents"
-      description: "Retrieve a list of documents with a status of 'pending'."
-      tags:
-        - "Documents"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: "Successful response with a list of pending documents."
-          schema:
-            type: "object"
-            properties:
-              status:
-                type: "string"
-                example: "success"
-              documents:
-                type: "array"
-                items:
-                  type: "object"
-                  properties:
-                    docId:
-                      type: "integer"
-                      example: 1
-                    module:
-                      type: "string"
-                      example: "Computer Science"
-                    description:
-                      type: "string"
-                      example: "Introduction to Programming"
-                    location:
-                      type: "string"
-                      example: "https://example.com/docs/1"
-                    university:
-                      type: "string"
-                      example: "North-West University"
-                    category:
-                      type: "string"
-                      example: "Lecture Notes"
-                    academicYear:
-                      type: "string"
-                      example: "2024"
-                    userId:
-                      type: "string"
-                      example: "user123"
-        "404":
-          description: "No pending documents found."
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "No pending documents found."
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "Internal Server Error"
-                  error:
-                    type: "string"
-                    example: "Error message details"
-
-  /api/v1/documents/{docId}:
-    post:
-      summary: Moderate a document (approve or deny)
-      description: "Allows a moderator to approve or deny a document. When approved, the document is moved to the APPROVED_DOCUMENT table. When denied, it's moved to the DENIED_DOCUMENT table."
+      summary: Get all documents
+      description: Retrieve a list of all documents based on the user's role.
       tags:
         - Documents
       security:
         - bearerAuth: []
+      responses:
+        '200':
+          description: A list of documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No documents found.
+        '500':
+          description: Failed to retrieve documents.
+
+  /api/v1/documents/pending:
+    get:
+      summary: Get pending documents
+      description: Retrieve a list of all pending documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of pending documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No pending documents found.
+        '500':
+          description: Failed to retrieve pending documents.
+
+  /api/v1/documents/reported:
+    get:
+      summary: Get reported documents
+      description: Retrieve a list of all reported documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of reported documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No reported documents found.
+        '500':
+          description: Failed to retrieve reported documents.
+
+  /api/v1/documents/approved:
+    get:
+      summary: Get approved documents
+      description: Retrieve a list of all approved documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of approved documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No approved documents found.
+        '500':
+          description: Failed to retrieve approved documents.
+
+  /api/v1/documents/denied:
+    get:
+      summary: Get denied documents
+      description: Retrieve a list of all denied documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of denied documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No denied documents found.
+        '500':
+          description: Failed to retrieve denied documents.
+
+  /api/v1/documents/{docId}:
+    get:
+      summary: Get document by ID
+      description: Retrieve a document by its ID.
+      tags:
+        - Documents
       parameters:
         - in: path
           name: docId
           required: true
           schema:
-            type: integer
-            example: 1
-          description: "The ID of the document to be moderated."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                action:
-                  type: string
-                  enum: [approve, deny]
-                  example: approve
-                  description: "Action to be taken on the document."
+            type: string
+            example: "12345"
+      security:
+        - bearerAuth: []
       responses:
         '200':
-          description: Document successfully moderated.
+          description: Document details.
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  status:
+                    type: string
+                    example: success
+                  document:
+                    $ref: '#/components/schemas/Document'
+        '404':
+          description: Document not found.
+        '500':
+          description: Failed to retrieve document.
+
+  /api/v1/documents/{docId}/approve:
+    post:
+      summary: Approve a document
+      description: Approve a pending document. Requires admin or moderator role.
+      tags:
+        - Documents
+      parameters:
+        - in: path
+          name: docId
+          required: true
+          schema:
+            type: string
+            example: "12345"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Document approved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
                   message:
                     type: string
-                    example: "Document successfully approved."
+                    example: Document approved successfully
         '400':
-          description: Invalid action or missing parameters.
+          description: Bad request, invalid document ID.
+        '403':
+          description: Forbidden, insufficient privileges.
         '404':
-          description: Document not found or already moderated.
+          description: Document not found.
         '500':
-          description: Internal server error.
+          description: Failed to approve document.
+
+  /api/v1/documents/{docId}/deny:
+    post:
+      summary: Deny a document
+      description: Deny a pending document. Requires admin or moderator role.
+      tags:
+        - Documents
+      parameters:
+        - in: path
+          name: docId
+          required: true
+          schema:
+            type: string
+            example: "12345"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Document denied successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Document denied successfully
+        '400':
+          description: Bad request, invalid document ID.
+        '403':
+          description: Forbidden, insufficient privileges.
+        '404':
+          description: Document not found.
+        '500':
+          description: Failed to deny document.
+
+  /api/v1/search:
+    get:
+      summary: Search documents
+      description: Search for documents based on a single search term. Accessible to all users.
+      tags:
+        - Documents
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+            example: "cloud computing"
+      responses:
+        '200':
+          description: Search results.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '400':
+          description: Bad request, invalid query.
+        '500':
+          description: Failed to perform search.
 
   /api/v1/report:
     post:
@@ -622,10 +702,81 @@ paths:
           '500':
             description: Internal server error.
 
-
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    Document:
+      type: object
+      properties:
+        docId:
+          type: integer
+          example: 123
+        module:
+          type: string
+          example: Mathematics
+        description:
+          type: string
+          example: "An introduction to algebra"
+        location:
+          type: string
+          example: "Room 101"
+        university:
+          type: string
+          example: "University of Example"
+        category:
+          type: string
+          example: "Math"
+        academicYear:
+          type: string
+          example: "2023/2024"
+        documentUserId:
+          type: integer
+          example: 567
+        fileName:
+          type: string
+          example: "algebra_101.pdf"
+        fileType:
+          type: string
+          example: "pdf"
+        fileSize:
+          type: string
+          example: "2MB"
+        pageCount:
+          type: integer
+          example: 45
+        author:
+          type: string
+          example: "John Doe"
+        creationDate:
+          type: string
+          format: date-time
+          example: "2023-05-12T08:40:00Z"
+        modificationDate:
+          type: string
+          format: date-time
+          example: "2023-06-01T08:40:00Z"
+        documentStatus:
+          type: string
+          example: "approved"
+        datetime_of_approval:
+          type: string
+          format: date-time
+          example: "2023-06-02T09:00:00Z"
+        datetime_of_denial:
+          type: string
+          format: date-time
+          example: "2023-06-03T09:00:00Z"
+        reporterUserId:
+          type: integer
+          example: 789
+        report_details:
+          type: string
+          example: "Inappropriate content"
+        report_timestamp:
+          type: string
+          format: date-time
+          example: "2023-06-01T10:15:00Z"
