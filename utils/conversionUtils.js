@@ -1,9 +1,7 @@
 const { PDFDocument } = require('pdf-lib');
 const mammoth = require('mammoth');  // For Word files
 const xlsx = require('xlsx');  // For Excel files
-const puppeteer = require('puppeteer');  // For HTML to PDF conversion
-const unzipper = require('unzipper');  // For unzipping .pptx files
-const xml2js = require('xml2js');  // For parsing XML
+const puppeteer = require('puppeteer');  // For rendering Excel and PowerPoint files to PDF
 
 const todayDate = new Date().toISOString(); // Today's date in ISO 8601 format
 
@@ -44,7 +42,53 @@ async function convertToPDF(file) {
     return { pdfBuffer, metadata };
 }
 
-// Example PDF metadata extraction
+// Convert Word file buffer to PDF using mammoth
+async function convertWordToPDF(buffer) {
+    try {
+        const { value: htmlContent } = await mammoth.convertToHtml({ buffer });
+        return await htmlToPDF(htmlContent);  // Convert the HTML output to PDF
+    } catch (error) {
+        console.error('Failed to convert Word file to PDF', error);
+        throw error;
+    }
+}
+
+// Convert Excel file to PDF using Puppeteer
+async function convertExcelToPDF(buffer) {
+    try {
+        const workbook = xlsx.read(buffer, { type: 'buffer' });
+        const htmlContent = xlsx.utils.sheet_to_html(workbook.Sheets[workbook.SheetNames[0]]);
+        return await htmlToPDF(htmlContent);  // Convert the HTML output to PDF
+    } catch (error) {
+        console.error('Failed to convert Excel file to PDF', error);
+        throw error;
+    }
+}
+
+// Convert PowerPoint file to PDF using Puppeteer
+async function convertPowerPointToPDF(buffer) {
+    // You may need to convert PowerPoint to HTML or use a similar strategy to convert it to PDF
+    // For now, assuming a generic approach using Puppeteer
+    try {
+        const htmlContent = '<html><body><h1>PowerPoint to PDF conversion coming soon...</h1></body></html>';  // Placeholder content
+        return await htmlToPDF(htmlContent);
+    } catch (error) {
+        console.error('Failed to convert PowerPoint file to PDF', error);
+        throw error;
+    }
+}
+
+// Convert HTML content to PDF using Puppeteer
+async function htmlToPDF(htmlContent) {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setContent(htmlContent);
+    const pdfBuffer = await page.pdf({ format: 'A4' });
+    await browser.close();
+    return pdfBuffer;
+}
+
+// Extract PDF metadata
 async function extractPDFMetadata(buffer) {
     try {
         const pdfDoc = await PDFDocument.load(buffer);
@@ -65,33 +109,14 @@ async function extractPDFMetadata(buffer) {
     }
 }
 
-// Convert Word to PDF
-async function convertWordToPDF(buffer) {
-    try {
-        const result = await mammoth.convertToHtml({ buffer });
-        return htmlToPDF(result.value);
-    } catch (error) {
-        console.error('Failed to convert Word to PDF', error);
-        throw new Error('Failed to convert Word to PDF');
-    }
-}
-
-// Extract Word metadata
+// Extract Word metadata using mammoth
 async function extractWordMetadata(buffer) {
     try {
-        const directory = await unzipper.Open.buffer(buffer);
-        const coreXmlFile = directory.files.find(file => file.path === 'docProps/core.xml');
-        
-        if (!coreXmlFile) {
-            throw new Error('core.xml not found in .docx file');
-        }
-
-        const coreXml = await coreXmlFile.buffer();
-        const coreXmlString = coreXml.toString();
-        const result = await xml2js.parseStringPromise(coreXmlString);
-        
+        const coreXmlFile = (await require('unzipper').Open.buffer(buffer)).files.find(file => file.path === 'docProps/core.xml');
+        if (!coreXmlFile) throw new Error('core.xml not found in .docx file');
+        const coreXmlString = (await coreXmlFile.buffer()).toString();
+        const result = await require('xml2js').parseStringPromise(coreXmlString);
         const properties = result['cp:coreProperties'] || {};
-        
         return {
             title: properties['dc:title']?.[0] || 'Unknown',
             author: properties['dc:creator']?.[0] || 'Unknown',
@@ -110,32 +135,50 @@ async function extractWordMetadata(buffer) {
         };
     }
 }
-
-// Convert Excel to PDF
-async function convertExcelToPDF(buffer) {
+// Extract PowerPoint metadata
+async function extractPowerPointMetadata(buffer) {
     try {
-        const workbook = xlsx.read(buffer, { type: 'buffer' });
-        const pdfBuffer = await convertExcelWorkbookToPDF(workbook);
-        return pdfBuffer;
+        const coreXmlFile = (await require('unzipper').Open.buffer(buffer)).files.find(file => file.path === 'docProps/core.xml');
+        if (!coreXmlFile) {
+            throw new Error('core.xml not found in .pptx file');
+        }
+
+        const coreXmlString = (await coreXmlFile.buffer()).toString();
+        const result = await require('xml2js').parseStringPromise(coreXmlString);
+        
+        const properties = result['cp:coreProperties'] || {};
+        
+        return {
+            title: properties['dc:title']?.[0] || 'Unknown',
+            author: properties['dc:creator']?.[0] || 'Unknown',
+            creationDate: properties['dcterms:created']?.[0] ? formatDate(properties['dcterms:created'][0]) : todayDate,
+            modificationDate: properties['dcterms:modified']?.[0] ? formatDate(properties['dcterms:modified'][0]) : todayDate,
+            slideCount: await countSlides(buffer)  // Count slides from the PowerPoint
+        };
     } catch (error) {
-        console.error('Failed to convert Excel to PDF', error);
-        throw new Error('Failed to convert Excel to PDF');
+        console.error('Failed to extract PowerPoint metadata', error);
+        return {
+            title: 'Unknown',
+            author: 'Unknown',
+            creationDate: todayDate,
+            modificationDate: todayDate,
+            slideCount: 'Unknown'
+        };
     }
 }
 
-// Convert Excel workbook to PDF directly
-async function convertExcelWorkbookToPDF(workbook) {
-    // Direct conversion to PDF is not supported by xlsx
-    // Alternative: convert to HTML and then to PDF
-    const html = workbook.SheetNames.map(sheetName => {
-        const worksheet = workbook.Sheets[sheetName];
-        return xlsx.utils.sheet_to_html(worksheet);
-    }).join('<div style="page-break-after:always;"></div>');
-
-    return htmlToPDF(html);
+// Count slides in a PowerPoint presentation
+async function countSlides(buffer) {
+    try {
+        const slideFiles = (await require('unzipper').Open.buffer(buffer)).files.filter(file => file.path.startsWith('ppt/slides/slide') && file.path.endsWith('.xml'));
+        return slideFiles.length;
+    } catch (error) {
+        console.error('Failed to count slides', error);
+        throw new Error('Failed to count slides');
+    }
 }
 
-// Extract Excel metadata
+// Extract Excel metadata using xlsx
 async function extractExcelMetadata(buffer) {
     try {
         const workbook = xlsx.read(buffer, { type: 'buffer' });
@@ -153,100 +196,6 @@ async function extractExcelMetadata(buffer) {
             creationDate: todayDate,
             modificationDate: todayDate
         };
-    }
-}
-
-// Convert PowerPoint to PDF
-async function convertPowerPointToPDF(buffer) {
-    try {
-        const slides = await extractPowerPointSlides(buffer);
-        const pdfBuffer = await slidesToPDF(slides);
-        return pdfBuffer;
-    } catch (error) {
-        console.error('Failed to convert PowerPoint to PDF', error);
-        throw new Error('Failed to convert PowerPoint to PDF');
-    }
-}
-
-// Extract PowerPoint metadata
-async function extractPowerPointMetadata(buffer) {
-    try {
-        const directory = await unzipper.Open.buffer(buffer);
-        const coreXmlFile = directory.files.find(file => file.path === 'docProps/core.xml');
-
-        if (!coreXmlFile) {
-            throw new Error('core.xml not found in .pptx file');
-        }
-
-        const coreXml = await coreXmlFile.buffer();
-        const coreXmlString = coreXml.toString();
-        const result = await xml2js.parseStringPromise(coreXmlString);
-        
-        const properties = result['cp:coreProperties'] || {};
-        
-        return {
-            title: properties['dc:title']?.[0] || 'Unknown',
-            author: properties['dc:creator']?.[0] || 'Unknown',
-            creationDate: properties['dcterms:created']?.[0] ? formatDate(properties['dcterms:created'][0]) : todayDate,
-            modificationDate: properties['dcterms:modified']?.[0] ? formatDate(properties['dcterms:modified'][0]) : todayDate,
-            slideCount: await countSlides(directory)  // Count slides from the PowerPoint
-        };
-    } catch (error) {
-        console.error('Failed to extract PowerPoint metadata', error);
-        return {
-            title: 'Unknown',
-            author: 'Unknown',
-            creationDate: todayDate,
-            modificationDate: todayDate,
-            slideCount: 'Unknown'
-        };
-    }
-}
-
-// Helper function to extract PowerPoint slides
-async function extractPowerPointSlides(buffer) {
-    try {
-        const slides = [];
-        const directory = await unzipper.Open.buffer(buffer);
-        const slideFiles = directory.files.filter(file => file.path.startsWith('ppt/slides/slide') && file.path.endsWith('.xml'));
-        
-        for (const file of slideFiles) {
-            const content = await file.buffer();
-            const xml = content.toString();
-            const result = await xml2js.parseStringPromise(xml);
-            
-            // Basic conversion example; refine based on actual content
-            const slideContent = result['p:sld']['p:cSld'][0]['p:spTree'][0];
-            slides.push(slideContent);  // Directly push XML content for further processing
-        }
-        
-        return slides;
-    } catch (error) {
-        console.error('Failed to extract PowerPoint slides', error);
-        throw new Error('Failed to extract PowerPoint slides');
-    }
-}
-
-// Convert slides to PDF directly
-async function slidesToPDF(slides) {
-    // Convert slides to PDF directly is complex and usually needs a specialized library
-    // This placeholder function assumes further processing is required
-    const html = slides.map(slide => `<div>${JSON.stringify(slide)}</div>`).join('<div style="page-break-after:always;"></div>');
-    return htmlToPDF(html);
-}
-
-// Convert HTML to PDF using Puppeteer
-async function htmlToPDF(html) {
-    try {
-        const browser = await puppeteer.launch({ headless: true });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        const pdfBuffer = await page.pdf();
-        await browser.close();
-        return pdfBuffer;
-    } catch (error) {
-        console.error('Failed to convert HTML to PDF', error);
-        throw new Error('Failed to convert HTML to PDF');
     }
 }
 
