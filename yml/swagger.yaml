@@ -109,7 +109,7 @@ paths:
         '401':
           description: Unauthorized, invalid credentials
   
-  /api/v1/password-reset/password-reset-request:
+  /api/v1/auth/password-reset-request:
     post:
       summary: Request a password reset
       tags:
@@ -144,7 +144,7 @@ paths:
         '404':
           description: Email not found
 
-  /api/v1/password-reset/reset-password:
+  /api/v1/auth/reset-password:
     post:
       summary: Reset password
       tags:
