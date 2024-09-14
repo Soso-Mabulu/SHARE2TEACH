@@ -17,8 +17,8 @@ router.get('/', authorize(['public access user', 'admin']), async (req, res) => 
 });
 
 // Search FAQs 
-router.get('/search/:term', async (req, res) => {
-  const { term } = req.params;
+router.get('/search', async (req, res) => {
+  const { term } = req.query;
   try {
     const pool = await connect();
     const result = await pool.request()
