@@ -486,8 +486,8 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
-          description: Document details.
+        "200":
+          description: Document successfully moderated.
           content:
             application/json:
               schema:
@@ -579,7 +579,7 @@ paths:
         '500':
           description: Failed to deny document.
 
-  /api/v1/search:
+  /api/v1/documents/search:
     get:
       summary: Search documents
       description: Search for documents based on a single search term. Accessible to all users.
@@ -587,7 +587,7 @@ paths:
         - Documents
       parameters:
         - in: query
-          name: query
+          name: search
           required: true
           schema:
             type: string
@@ -656,29 +656,411 @@ paths:
         500:
           description: "Server error."
 
-  /api/v1/moderation:
-      post:
-        summary: Moderate a document
-        description: Allows a moderator to approve or deny a document. If approved, the document is moved to the APPROVED_DOCUMENT table; if denied, it is moved to the DENIED_DOCUMENT table. Requires moderator role.
-        tags:
-          - Moderation
-        security:
-          - bearerAuth: []
-        parameters:
-          - in: path
-            name: docid
-            required: true
+  /api/v1/fileRating:
+    post:
+      summary: Rate a file
+      description: "Endpoint to rate a file by providing file ID, user ID, and rating."
+      tags:
+        - File Rating
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: integer
-              example: 1
-            description: The ID of the document to be moderated.
-        requestBody:
-          required: true
+              type: object
+              properties:
+                docId:
+                  type: integer
+                  example: 123
+                  description: "The document ID being rated."
+                userId:
+                  type: integer
+                  example: 456
+                  description: "The user ID rating the document."
+                rating:
+                  type: integer
+                  example: 4
+                  description: "The rating given to the document (0-5)."
+      responses:
+        "200":
+          description: Rating added successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  message:
+                    type: string
+                    example: "Rating added successfully."
+        "400":
+          description: Invalid input or rating already exists.
+        "500":
+          description: Server error.
+
+    get:
+      summary: Get all ratings
+      description: "Endpoint to retrieve all ratings, authorized for admins."
+      tags:
+        - File Rating
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: A list of all ratings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    docId:
+                      type: integer
+                      example: 123
+                      description: "The document ID."
+                    userId:
+                      type: integer
+                      example: 456
+                      description: "The user ID."
+                    rating:
+                      type: integer
+                      example: 4
+                      description: "The rating given to the document."
+        "500":
+          description: Server error.
+
+  /api/v1/moderation:
+    post:
+      summary: Moderate a document
+      description: Allows a moderator to approve or deny a document. If approved, the document is moved to the APPROVED_DOCUMENT table; if denied, it is moved to the DENIED_DOCUMENT table. Requires moderator role.
+      tags:
+        - Moderation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                docid:
+                  type: integer
+                  description: The ID of the document to be moderated.
+                  example: 1
+                action:
+                  type: string
+                  enum: [approve, disapprove]
+                  description: The action to be taken on the document.
+                  example: "approve"
+                comment:
+                  type: string
+                  description: An optional comment regarding the moderation decision.
+                  example: "Document meets all the requirements."
+              required:
+                - docid
+                - action
+      responses:
+        '200':
+          description: Document moderated successfully.
+        '400':
+          description: Bad request, invalid action or docid.
+        '403':
+          description: Forbidden, insufficient privileges.
+        '404':
+          description: Document not found.
+        '500':
+          description: Internal server error.
+
+  /api/v1/faq/:
+    get:
+      summary: Get all FAQs
+      description: "Retrieve all FAQs, accessible by both public access users and admins."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: A list of all FAQs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    faqId:
+                      type: integer
+                      example: 1
+                      description: "The FAQ ID."
+                    question:
+                      type: string
+                      example: "What is Share2Teach?"
+                      description: "The FAQ question."
+                    answer:
+                      type: string
+                      example: "Share2Teach is a platform for sharing educational resources."
+                      description: "The FAQ answer."
+        "500":
+          description: Server error.
+
+  /api/v1/faq/search/term:
+    get:
+      summary: Search FAQs
+      description: "Search FAQs by term, accessible by both public access users and admins."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: term
+          required: true
+          schema:
+            type: string
+            example: "Share2Teach"
+          description: "The search term."
+      responses:
+        "200":
+          description: A list of FAQs matching the search term.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    faqId:
+                      type: integer
+                      example: 1
+                      description: "The FAQ ID."
+                    question:
+                      type: string
+                      example: "What is Share2Teach?"
+                      description: "The FAQ question."
+                    answer:
+                      type: string
+                      example: "Share2Teach is a platform for sharing educational resources."
+                      description: "The FAQ answer."
+        "500":
+          description: Server error.
+
+  /api/v1/faq/faqId:
+    get:
+      summary: Get a single FAQ by ID
+      description: "Retrieve a single FAQ by ID, accessible by both public access users and admins."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: faqId
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: "The ID of the FAQ to retrieve."
+      responses:
+        "200":
+          description: The requested FAQ.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  faqId:
+                    type: integer
+                    example: 1
+                    description: "The FAQ ID."
+                  question:
+                    type: string
+                    example: "What is Share2Teach?"
+                    description: "The FAQ question."
+                  answer:
+                    type: string
+                    example: "Share2Teach is a platform for sharing educational resources."
+                    description: "The FAQ answer."
+        "404":
+          description: FAQ not found.
+        "500":
+          description: Server error.
+
+    put:
+      summary: Update an FAQ
+      description: "Update an FAQ by ID, accessible by admins only."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: faqId
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: "The ID of the FAQ to update."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question:
+                  type: string
+                  example: "What is Share2Teach?"
+                  description: "The updated FAQ question."
+                answer:
+                  type: string
+                  example: "Share2Teach is a platform for sharing educational resources."
+                  description: "The updated FAQ answer."
+      responses:
+        "200":
+          description: FAQ updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  faqId:
+                    type: integer
+                    example: 1
+                    description: "The FAQ ID."
+                  question:
+                    type: string
+                    example: "What is Share2Teach?"
+                    description: "The updated FAQ question."
+                  answer:
+                    type: string
+                    example: "Share2Teach is a platform for sharing educational resources."
+                    description: "The updated FAQ answer."
+        "404":
+          description: FAQ not found.
+        "500":
+          description: Server error.
+
+    delete:
+      summary: Delete an FAQ
+      description: "Delete an FAQ by ID, accessible by admins only."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: faqId
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: "The ID of the FAQ to delete."
+      responses:
+        "204":
+          description: FAQ deleted successfully.
+        "404":
+          description: FAQ not found.
+        "500":
+          description: Server error.
+
+  /api/v1/faq/:
+    post:
+      summary: Create a new FAQ
+      description: "Create a new FAQ, accessible by admins only."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                question:
+                  type: string
+                  example: "What is Share2Teach?"
+                  description: "The FAQ question."
+                answer:
+                  type: string
+                  example: "Share2Teach is a platform for sharing educational resources."
+                  description: "The FAQ answer."
+      responses:
+        "201":
+          description: FAQ created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  faqId:
+                    type: integer
+                    example: 1
+                    description: "The FAQ ID."
+                  question:
+                    type: string
+                    example: "What is Share2Teach?"
+                    description: "The FAQ question."
+                  answer:
+                    type: string
+                    example: "Share2Teach is a platform for sharing educational resources."
+                    description: "The FAQ answer."
+        "500":
+          description: Server error.
+
+  /api/v1/faq/rating/faqId:
+    post:
+      summary: Rate an FAQ
+      description: "Rate an FAQ by providing FAQ ID, user ID, and rating, accessible by public access users."
+      tags:
+        - FAQ
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: faqId
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: "The ID of the FAQ to rate."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  example: 456
+                  description: "The user ID rating the FAQ."
+                rating:
+                  type: integer
+                  example: 4
+                  description: "The rating given to the FAQ (0-5)."
+      responses:
+        "200":
+          description: Rating submitted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Rating submitted successfully."
+        "400":
+          description: Invalid input or rating already exists."
+        "404":
+          description: FAQ or user not found."
+        "500":
+          description: Server error."
                   action:
                     type: string
                     enum: [approve, deny]
@@ -688,8 +1070,8 @@ paths:
                     type: string
                     description: An optional comment regarding the moderation decision.
                     example: "Document meets all the requirements."
-                required:
-                  - action
+                  required:
+                    - action
         responses:
           '200':
             description: Document moderated successfully.
