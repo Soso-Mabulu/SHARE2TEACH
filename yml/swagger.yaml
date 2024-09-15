@@ -1032,6 +1032,225 @@ paths:
           description: "FAQ or user not found."
         "500":
           description: "Server error."
+
+  # Existing paths omitted for brevity
+
+  /api/v1/analytics/approved-documents:
+    get:
+      summary: Get total number of approved documents
+      tags:
+        - Analytics
+      description: Returns the count of approved documents.
+      responses:
+        "200":
+          description: Approved documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  approved_count:
+                    type: integer
+                    example: 120
+
+  /api/v1/analytics/denied-documents:
+    get:
+      summary: Get total number of denied documents
+      tags:
+        - Analytics
+      description: Returns the count of denied documents.
+      responses:
+        "200":
+          description: Denied documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  denied_count:
+                    type: integer
+                    example: 45
+
+  /api/v1/analytics/reported-documents:
+    get:
+      summary: Get total number of reported documents
+      tags:
+        - Analytics
+      description: Returns the count of reported documents.
+      responses:
+        "200":
+          description: Reported documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reported_count:
+                    type: integer
+                    example: 10
+
+  /api/v1/analytics/pending-documents:
+    get:
+      summary: Get total number of pending documents
+      tags:
+        - Analytics
+      description: Returns the count of pending documents.
+      responses:
+        "200":
+          description: Pending documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pending_count:
+                    type: integer
+                    example: 80
+
+  /api/v1/analytics/total-users:
+    get:
+      summary: Get total number of users
+      tags:
+        - Analytics
+      description: Returns the total number of registered users.
+      responses:
+        "200":
+          description: Total user count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_count:
+                    type: integer
+                    example: 300
+
+  /api/v1/analytics/active-users:
+    get:
+      summary: Get total number of active users
+      tags:
+        - Analytics
+      description: Returns the number of active users in the last 30 days.
+      responses:
+        "200":
+          description: Active user count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active_users:
+                    type: integer
+                    example: 150
+
+  /api/v1/analytics/user-signups:
+    get:
+      summary: Get number of user signups for a time period
+      tags:
+        - Analytics
+      description: Returns the number of new user signups within a specified time range.
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+          required: true
+          description: Start date for the time range.
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+          required: true
+          description: End date for the time range.
+      responses:
+        "200":
+          description: User signups count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  signups:
+                    type: integer
+                    example: 40
+
+  /api/v1/analytics/ratings-per-time-period:
+    get:
+      summary: Get average ratings over a time period
+      tags:
+        - Analytics
+      description: Returns the average rating and the total number of ratings within a time period.
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+          required: true
+          description: Start date for the time range.
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+          required: true
+          description: End date for the time range.
+      responses:
+        "200":
+          description: Ratings metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  average_rating:
+                    type: number
+                    format: float
+                    example: 4.5
+                  total_ratings:
+                    type: integer
+                    example: 50
+
+  /api/v1/analytics/uploaded-documents:
+    get:
+      summary: Get uploaded documents in a time period
+      tags:
+        - Analytics
+      description: Returns the total number of uploaded documents within a specified time period.
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+          required: true
+          description: Start date for the time range.
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+          required: true
+          description: End date for the time range.
+      responses:
+        "200":
+          description: Uploaded documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploaded_docs:
+                    type: integer
+                    example: 30
 components:
   securitySchemes:
     bearerAuth:

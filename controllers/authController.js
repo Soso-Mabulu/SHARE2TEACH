@@ -64,6 +64,17 @@ const signIn = async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Update last login timestamp
+    const updateLastLoginQuery = `
+      UPDATE [User]
+      SET last_login = GETDATE()
+      WHERE email = @email
+    `;
+    await pool.request()
+        .input('email', sql.VarChar, email)
+        .query(updateLastLoginQuery);
+
+
     const token = generateToken(user);
     res.json({ token });
   } catch (err) {
