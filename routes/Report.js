@@ -1,15 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { reportFile, denyReport } = require('../controllers/fileReportController');
+const { reportFile, reviewReport } = require('../controllers/fileReportController'); // Updated import
 const authorize = require('../middleware/authorize');
-
 
 router.use(authorize('public'));
 
 // Report a file
 router.post('/', reportFile);
 
-// Deny a report
-//router.post('/:id/deny', denyReport);
+// Review a report based on severity level
+router.get('/:reportId/review', reviewReport); // New route to review the report
 
 module.exports = router;
