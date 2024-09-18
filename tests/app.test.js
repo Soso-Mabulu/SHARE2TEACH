@@ -120,7 +120,7 @@ describe('Moderation Endpoint Tests', () => {
   // });
 });
 
-/*describe('Document Rating API Tests', () => {
+describe('Document Rating API Tests', () => {
   let adminToken;
   let userToken;
 
@@ -152,7 +152,7 @@ describe('Moderation Endpoint Tests', () => {
     userToken = userResponse.body.token;
   });
 
-  it('should rate a document successfully', async () => {
+  /*it('should rate a document successfully', async () => {
     const ratingData = {
       docId:13,  // Replace with an actual docId from your test database
       userId: 17, // Replace with an actual userId from your test database
@@ -212,7 +212,8 @@ describe('Moderation Endpoint Tests', () => {
     expect(response.text).toBe('You cannot rate the same document more than once');
   });
 */
-/*it('should get all ratings as admin', async () => {
+
+it('should get all ratings as admin', async () => {
   const response = await request(app)
     .get('/api/v1/fileRating')
     .set('Authorization', `Bearer ${adminToken}`);
@@ -221,7 +222,7 @@ describe('Moderation Endpoint Tests', () => {
   console.log('Get all ratings status:', response.statusCode);
   expect(response.statusCode).toBe(200);
   expect(response.body).toBeInstanceOf(Array);
-});*/
+});
 /* it('should return 403 for public access user trying to get all ratings', async () => {
     const response = await request(app)
       .get('/api/v1/fileRating')
@@ -229,7 +230,7 @@ describe('Moderation Endpoint Tests', () => {
 
     expect(response.statusCode).toBe(403);
   });*/
-//});
+});
 
 describe('FAQ API Tests', () => {
   let adminToken;
@@ -263,7 +264,7 @@ describe('FAQ API Tests', () => {
     userToken = userResponse.body.token;
   });
 
-  /*it('should get all FAQs as admin', async () => {
+  it('should get all FAQs as admin', async () => {
     const response = await request(app)
       .get('/api/v1/faq')
       .set('Authorization', `Bearer ${adminToken}`);
@@ -271,7 +272,7 @@ describe('FAQ API Tests', () => {
     console.log('Get all FAQs response:', response.body);
     expect(response.statusCode).toBe(200);
     expect(response.body).toBeInstanceOf(Array);
-  });*/
+  });
 
   /*it('should get all FAQs as public user', async () => {
     const response = await request(app)
