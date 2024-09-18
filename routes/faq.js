@@ -5,7 +5,7 @@ const sql = require('mssql');
 const authorize = require('../middleware/authorize');
 
 // Get all FAQs
-router.get('/', authorize(['public access user', 'admin']), async (req, res) => {
+router.get('/', authorize(['public', 'admin']), async (req, res) => {
   try {
     const pool = await connect();
     const result = await pool.request().query('SELECT * FROM FAQ');
@@ -104,7 +104,7 @@ router.delete('/:faqId', authorize('admin'), async (req, res) => {
   }
 });
 
-router.post('/rating/:faqId', authorize('public access user'), async (req, res) => {
+router.post('/rating/:faqId', authorize('public'), async (req, res) => {
   const { faqId } = req.params;
   const { userId, rating } = req.body;
 
@@ -157,6 +157,7 @@ router.post('/rating/:faqId', authorize('public access user'), async (req, res) 
     console.error('Database error:', err);
     res.status(500).send('An error occurred');
   }
+  
 });
 
 module.exports = router;

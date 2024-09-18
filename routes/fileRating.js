@@ -5,7 +5,7 @@ const sql = require('mssql');
 const authorize = require('../middleware/authorize');
 
 // Route to rate a document, authorized for users
-router.post('/rate', authorize('public access user'), async (req, res) => {
+router.post('/rate', authorize('public'), async (req, res) => {
     const { docId, userId, rating } = req.body;
    
     // Validate the rating
