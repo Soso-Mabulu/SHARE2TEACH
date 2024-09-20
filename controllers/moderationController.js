@@ -1,88 +1,42 @@
-// ./controllers/moderationController.js        
-const sql = require('mssql');
+const moment = require('moment-timezone');
 const connectToDatabase = require('../config/db');
+const sql = require('mssql');
 
-// getPendingDocuments function
-const getPendingDocuments = async (req, res) => {
-    try {
-        const connection = await connectToDatabase();
-
-        const query = `
-            SELECT docId, module, description, location, university, category, academicYear, userId
-            FROM DOCUMENT
-            WHERE status = 'pending'
-        `;
-        
-        const request = new sql.Request(connection);
-        const result = await request.query(query);
-
-        if (!result.recordset.length) {
-            return res.status(404).json({ message: 'No pending documents found.' });
-        }
-
-        res.status(200).json({ status: 'success', documents: result.recordset });
-    } catch (err) {
-        console.error('Error retrieving pending documents:', err);
-        res.status(500).json({ message: 'Failed to retrieve pending documents', error: err.message });
-    }
-};
-
-// Function to approve or deny a document
-const moderateDocument = async (req, res) => {
-    const { docId } = req.params;
-    const { action } = req.body; // 'approve' or 'deny'
-
-    if (!['approve', 'deny'].includes(action)) {
-        return res.status(400).json({ message: 'Invalid action. Use "approve" or "deny".' });
-    }
+// Function to handle reporting a file with severity levels
+const reportFile = async (req, res) => {
+    const { docId, userId, report_details, severity_level } = req.body; // Add severity level
 
     try {
         const connection = await connectToDatabase();
 
         // Start a transaction
-        const transaction = new sql.Transaction(connection);
+        const transaction = new sql.Transaction();
         await transaction.begin();
 
         try {
-            // Retrieve the document
-            const getDocQuery = `SELECT * FROM DOCUMENT WHERE docId = @docId AND status = 'pending'`;
+            // Insert the report into the REPORTS table
+            const insertReportQuery = `
+                INSERT INTO DOCUMENT_REPORTING (docId, userId, report_details, report_timestamp, severity_level)
+                VALUES (@docId, @userId, @report_details, @report_timestamp, @severity_level)
+            `;
             const request = new sql.Request(transaction);
             request.input('docId', sql.Int, docId);
-            const docResult = await request.query(getDocQuery);
-
-            if (!docResult.recordset.length) {
-                return res.status(404).json({ message: 'Document not found or already moderated.' });
-            }
-
-            // Determine the target table and status based on action
-            const targetTable = action === 'approve' ? 'APPROVED_DOCUMENT' : 'DENIED_DOCUMENT';
-            const status = action === 'approve' ? 'approved' : 'denied';
-            const timestampField = action === 'approve' ? 'datetime_of_approval' : 'datetime_of_denial';
-
-            // Insert into the target table with the timestamp
-            const insertDocQuery = `
-                INSERT INTO ${targetTable} (docId, ${timestampField})
-                VALUES (@docId, GETDATE())
-            `;
-            await request.query(insertDocQuery);
-
-            // Update the status of the document in the DOCUMENT table
-            const updateDocQuery = `
-                UPDATE DOCUMENT
-                SET status = @status
-                WHERE docId = @docId
-            `;
-            request.input('status', sql.NVarChar, status);
-            await request.query(updateDocQuery);
+            request.input('userId', sql.Int, userId);
+            request.input('report_details', sql.NVarChar, report_details);
+            request.input('report_timestamp', sql.DateTime, moment().tz('Africa/Johannesburg').toDate());
+            request.input('severity_level', sql.NVarChar, severity_level); // New severity level field
+            await request.query(insertReportQuery);
 
             // Commit the transaction
             await transaction.commit();
-
-            res.status(200).json({ message: `Document successfully ${action}d.` });
+            res.status(200).json({ message: 'File reported successfully.' });
         } catch (err) {
+            // Rollback the transaction in case of error
             await transaction.rollback();
-            console.error('Error during moderation:', err);
-            res.status(500).json({ message: `Failed to ${action} document.`, error: err.message });
+            console.error('Error reporting file:', err);
+            res.status(500).json({ message: 'Failed to report file.', error: err.message });
+        } finally {
+            connection.close(); // Always close the connection
         }
     } catch (err) {
         console.error('Error connecting to the database:', err);
@@ -90,4 +44,58 @@ const moderateDocument = async (req, res) => {
     }
 };
 
-module.exports = { getPendingDocuments, moderateDocument };
+// Function to review a report based on severity level
+const reviewReport = async (req, res) => {
+    const { reportId } = req.params;
+
+    try {
+        const connection = await connectToDatabase();
+        const request = new sql.Request(connection);
+
+        // Get the report details including the severity level
+        const selectReportQuery = `
+            SELECT docId, userId, report_details, report_timestamp, severity_level
+            FROM DOCUMENT_REPORTING
+            WHERE report_id = @reportId
+        `;
+        request.input('reportId', sql.Int, reportId);
+        const result = await request.query(selectReportQuery);
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: 'Report not found.' });
+        }
+
+        const report = result.recordset[0];
+        const severity = report.severity_level;
+
+        // Take actions based on the severity level
+        switch (severity) {
+            case 'minor':
+                // Minor infractions can pass a second round of moderation
+                res.status(200).json({ message: 'Minor infraction. Marked for review.' });
+                break;
+            case 'moderate':
+                // Moderate infractions may require manual moderation or warning
+                res.status(200).json({ message: 'Moderate infraction. Awaiting further moderation.' });
+                break;
+            case 'egregious':
+                // Egregious infractions should be immediately deleted
+                const deleteQuery = `
+                    DELETE FROM DOCUMENT_REPORTING
+                    WHERE report_id = @reportId;
+                `;
+                await request.query(deleteQuery);
+                res.status(200).json({ message: 'Egregious infraction. Content deleted.' });
+                break;
+            default:
+                res.status(400).json({ message: 'Unknown severity level.' });
+        }
+
+        connection.close(); // Always close the connection
+    } catch (err) {
+        console.error('Error reviewing report:', err);
+        res.status(500).json({ message: 'Failed to review report.', error: err.message });
+    }
+};
+
+module.exports = { reportFile, reviewReport };

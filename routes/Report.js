@@ -3,12 +3,10 @@ const router = express.Router();
 const { reportFile, reviewReport } = require('../controllers/fileReportController'); // Updated import
 const authorize = require('../middleware/authorize');
 
-router.use(authorize('public'));
+// Public users can report a file
+router.post('/', authorize('public'), reportFile);
 
-// Report a file
-router.post('/', reportFile);
-
-// Review a report based on severity level
-router.get('/:reportId/review', reviewReport); // New route to review the report
+// Only moderators can review a report based on severity level
+router.get('/:reportId/review', authorize('moderator'), reviewReport);
 
 module.exports = router;
