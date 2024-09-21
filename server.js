@@ -8,6 +8,7 @@ const usersRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/uploadRoutes');
 const moderationRoutes = require('./routes/moderationRoutes');
 const faqRoutes = require('./routes/faq');
+const fileRating = require('./routes/fileRating');
 const reportedFile = require('./routes/Report.js');
 const documents = require('./routes/documents.js');
 const authRoutes = require('./routes/authRoutes');
@@ -33,6 +34,7 @@ app.use(`/api/${apiVersion}/report`, reportedFile);
 app.use (`/api/${apiVersion}/documents`, documents);
 app.use(`/api/${apiVersion}/auth`, authRoutes);
 app.use(`/api/${apiVersion}/moderation`, moderationRoutes);
+app.use(`/api/${apiVersion}/fileRating`, fileRating);
 
 
 // Swagger setup
