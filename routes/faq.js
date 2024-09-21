@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const connect = require('../config/db');
 const sql = require('mssql');
+const authorize = require('../middleware/authorize');
 
 // Get all FAQs
-router.get('/', async (req, res) => {
+router.get('/', authorize(['public', 'admin']), async (req, res) => {
   try {
     const pool = await connect();
     const result = await pool.request().query('SELECT * FROM FAQ');
@@ -15,9 +16,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Search FAQs
-router.get('/search/:term', async (req, res) => {
-  const { term } = req.params;
+// Search FAQs 
+router.get('/search', async (req, res) => {
+  const { term } = req.query;
   try {
     const pool = await connect();
     const result = await pool.request()
@@ -30,8 +31,8 @@ router.get('/search/:term', async (req, res) => {
   }
 });
 
-// Get a single FAQ by ID
-router.get('/:faqId', async (req, res) => {
+// Get a single FAQ by ID (accessible by both users and admins)
+/*router.get('/:faqId', authorize(['public access user', 'admin']), async (req, res) => {
   const { faqId } = req.params;
   try {
     const pool = await connect();
@@ -47,9 +48,9 @@ router.get('/:faqId', async (req, res) => {
     res.status(500).send(err);
   }
 });
-
-// Create a new FAQ
-router.post('/', async (req, res) => {
+*/
+// Create a new FAQ (admin only)
+router.post('/newfaq', authorize('admin'), async (req, res) => {
   const { question, answer } = req.body;
   try {
     const pool = await connect();
@@ -64,8 +65,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update an FAQ
-router.put('/:faqId', async (req, res) => {
+// Update an FAQ (admin only)
+router.put('/:faqId', authorize('admin'), async (req, res) => {
   const { faqId } = req.params;
   const { question, answer } = req.body;
   try {
@@ -85,8 +86,8 @@ router.put('/:faqId', async (req, res) => {
   }
 });
 
-// Delete an FAQ
-router.delete('/:faqId', async (req, res) => {
+// Delete an FAQ (admin only)
+router.delete('/:faqId', authorize('admin'), async (req, res) => {
   const { faqId } = req.params;
   try {
     const pool = await connect();
@@ -101,6 +102,62 @@ router.delete('/:faqId', async (req, res) => {
     console.error('Database error:', err);
     res.status(500).send(err);
   }
+});
+
+router.post('/rating/:faqId', authorize('public'), async (req, res) => {
+  const { faqId } = req.params;
+  const { userId, rating } = req.body;
+
+  // Validate the rating
+  if (rating < 0 || rating > 5) {
+    return res.status(400).send('Rating must be between 0 and 5');
+  }
+
+  try {
+    const pool = await connect();
+
+    // Check if the FAQ exists
+    const faqResult = await pool.request()
+      .input('faqId', sql.Int, faqId)
+      .query('SELECT * FROM FAQ WHERE faqId = @faqId');
+
+    if (faqResult.recordset.length === 0) {
+      return res.status(404).send('FAQ not found');
+    }
+
+    // Check if the user exists
+    const userResult = await pool.request()
+      .input('userId', sql.Int, userId)
+      .query('SELECT * FROM [USER] WHERE userId = @userId');
+
+    if (userResult.recordset.length === 0) {
+      return res.status(404).send('User not found');
+    }
+
+    // Insert the rating into FAQ_RATING table
+    await pool.request()
+      .input('faqId', sql.Int, faqId)
+      .input('userId', sql.Int, userId)
+      .input('rating', sql.Int, rating)
+      .query('INSERT INTO FAQ_RATING (faqId, userId, rating) VALUES (@faqId, @userId, @rating)');
+
+    // Update the average rating in the FAQ table
+    await pool.request()
+      .input('faqId', sql.Int, faqId)
+      .query('MERGE FAQ_AVERAGE_RATING AS target ' +
+             'USING (SELECT faqId, AVG(rating) AS averageRating, COUNT(*) AS ratingCount FROM FAQ_RATING WHERE faqId = @faqId GROUP BY faqId) AS source ' +
+             'ON (target.faqId = source.faqId) ' +
+             'WHEN MATCHED THEN ' +
+             'UPDATE SET averageRating = source.averageRating, ratingCount = source.ratingCount ' +
+             'WHEN NOT MATCHED THEN ' +
+             'INSERT (faqId, averageRating, ratingCount) VALUES (source.faqId, source.averageRating, source.ratingCount);');
+
+    res.status(200).send('Rating submitted successfully');
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).send('An error occurred');
+  }
+  
 });
 
 module.exports = router;
