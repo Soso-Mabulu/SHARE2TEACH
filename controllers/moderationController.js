@@ -1,93 +1,104 @@
-// ./controllers/moderationController.js        
 const sql = require('mssql');
-const connectToDatabase = require('../config/db');
+const getPool = require('../config/db');
+const moment = require('moment-timezone'); // Ensure moment-timezone is installed
 
-// getPendingDocuments function
-const getPendingDocuments = async (req, res) => {
-    try {
-        const connection = await connectToDatabase();
+// File moderation: approve/disapprove with comments
+const moderateFile = async (req, res) => {
+  const { docid, action, comments } = req.body;
 
-        const query = `
-            SELECT docId, module, description, location, university, category, academicYear, userId 
-            FROM DOCUMENT
-            WHERE status = 'pending'
-        `;
+  // Validate inputs
+  if (!docid || !action || !['approve', 'disapprove'].includes(action)) {
+    return res.status(400).json({ message: 'Invalid input: docid and action are required, action must be either approve or disapprove.' });
+  }
+
+  // Require comments if the action is 'disapprove'
+  if (action === 'disapprove' && (!comments || comments.trim().length === 0)) {
+    return res.status(400).json({ message: 'Comments are required when disapproving a document.' });
+  }
+
+  try {
+    const pool = await getPool();
+    const now = moment().tz('Africa/Johannesburg').toDate(); // Current datetime in Johannesburg timezone
+
+    // Check if the document exists and its current status
+    const documentCheckQuery = `
+      SELECT status
+      FROM DOCUMENT
+      WHERE docid = @docid;
+    `;
+
+    const documentCheckResult = await pool.request()
+      .input('docid', sql.Int, docid)
+      .query(documentCheckQuery);
+
+    if (documentCheckResult.recordset.length === 0) {
+      return res.status(404).json({ message: 'Document not found.' });
+    }
+
+    const currentStatus = documentCheckResult.recordset[0].status;
+
+    // Check if the document has already been moderated
+    if (currentStatus === 'approved' || currentStatus === 'denied') {
+      return res.status(400).json({ message: `Document has already been ${currentStatus}.` });
+    }
+
+    let query;
+    const inputs = {
+      docid: sql.Int,
+      now: sql.DateTime
+    };
+
+    if (action === 'approve') {
+      query = `
+        BEGIN TRANSACTION;
         
-        const request = new sql.Request(connection);
-        const result = await request.query(query);
+        -- Update document status
+        UPDATE DOCUMENT 
+        SET status = 'approved'
+        WHERE docid = @docid;
 
-        if (!result.recordset.length) {
-            return res.status(404).json({ message: 'No pending documents found.' });
-        }
+        -- Insert into APPROVED_DOCUMENT
+        INSERT INTO APPROVED_DOCUMENT (docid, datetime_of_approval)
+        VALUES (@docid, @now);
 
-        res.status(200).json({ status: 'success', documents: result.recordset });
-    } catch (err) {
-        console.error('Error retrieving pending documents:', err);
-        res.status(500).json({ message: 'Failed to retrieve pending documents', error: err.message });
+        COMMIT TRANSACTION;
+      `;
+    } else {
+      query = `
+        BEGIN TRANSACTION;
+
+        -- Update document status
+        UPDATE DOCUMENT 
+        SET status = 'denied'
+        WHERE docid = @docid;
+
+        -- Insert into DENIED_DOCUMENT
+        INSERT INTO DENIED_DOCUMENT (docid, datetime_of_denial, denial_comments)
+        VALUES (@docid, @now, @comments);
+
+        COMMIT TRANSACTION;
+      `;
+      inputs.comments = sql.VarChar;
     }
+
+    // Execute query
+    const request = pool.request()
+      .input('docid', inputs.docid, docid)
+      .input('now', inputs.now, now);
+    
+    if (action === 'disapprove') {
+      request.input('comments', inputs.comments, comments);
+    }
+
+    await request.query(query);
+
+    res.status(200).json({ message: `Document ${action}d successfully.` });
+  } catch (err) {
+    console.error('Moderation Error:', err.message);
+    res.status(500).json({ message: 'Failed to moderate document', error: err.message });
+  }
 };
 
-// Function to approve or deny a document
-const moderateDocument = async (req, res) => {
-    const { docId } = req.params;
-    const { action } = req.body; // 'approve' or 'deny'
-
-    if (!['approve', 'deny'].includes(action)) {
-        return res.status(400).json({ message: 'Invalid action. Use "approve" or "deny".' });
-    }
-
-    try {
-        const connection = await connectToDatabase();
-
-        // Start a transaction
-        const transaction = new sql.Transaction(connection);
-        await transaction.begin();
-
-        try {
-            // Retrieve the document
-            const getDocQuery = `SELECT * FROM DOCUMENT WHERE docId = @docId AND status = 'pending'`;
-            const request = new sql.Request(transaction);
-            request.input('docId', sql.Int, docId);
-            const docResult = await request.query(getDocQuery);
-
-            if (!docResult.recordset.length) {
-                return res.status(404).json({ message: 'Document not found or already moderated.' });
-            }
-
-            // Determine the target table and status based on action
-            const targetTable = action === 'approve' ? 'APPROVED_DOCUMENT' : 'DENIED_DOCUMENT';
-            const status = action === 'approve' ? 'approved' : 'denied';
-            const timestampField = action === 'approve' ? 'datetime_of_approval' : 'datetime_of_denial';
-
-            // Insert into the target table with the timestamp
-            const insertDocQuery = `
-                INSERT INTO ${targetTable} (docId, ${timestampField})
-                VALUES (@docId, GETDATE())
-            `;
-            await request.query(insertDocQuery);
-
-            // Update the status of the document in the DOCUMENT table
-            const updateDocQuery = `
-                UPDATE DOCUMENT
-                SET status = @status
-                WHERE docId = @docId
-            `;
-            request.input('status', sql.NVarChar, status);
-            await request.query(updateDocQuery);
-
-            // Commit the transaction
-            await transaction.commit();
-
-            res.status(200).json({ message: `Document successfully ${action}d.` });
-        } catch (err) {
-            await transaction.rollback();
-            console.error('Error during moderation:', err);
-            res.status(500).json({ message: `Failed to ${action} document.`, error: err.message });
-        }
-    } catch (err) {
-        console.error('Error connecting to the database:', err);
-        res.status(500).json({ message: 'Database connection error.', error: err.message });
-    }
+module.exports = {
+  moderateFile,
 };
-
-module.exports = { getPendingDocuments, moderateDocument };

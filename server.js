@@ -9,15 +9,16 @@ const setupSwagger = require('./routes/swagger');
 dotenv.config();
 
 // Import routes
-const signupRoutes = require('./routes/signup');
-const signinRoutes = require('./routes/signin');
-const protectedRoutes = require('./routes/protected');
 const usersRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/uploadRoutes');
-const searchRoutes = require('./routes/searchDocuments');
 const moderationRoutes = require('./routes/moderationRoutes');
 const faqRoutes = require('./routes/faq');
-const passwordResetRoutes = require('./routes/passreset');
+const fileRating = require('./routes/fileRating');
+const reportedFile = require('./routes/Report.js');
+const documents = require('./routes/documents.js');
+const authRoutes = require('./routes/authRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+
 
 // Create express app
 const app = express();
@@ -33,16 +34,17 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // API routes
-const apiVersion = process.env.API_VERSION || 'v1';
-app.use(`/api/${apiVersion}/signup`, signupRoutes);
-app.use(`/api/${apiVersion}/signin`, signinRoutes);
-app.use(`/api/${apiVersion}/protected`, protectedRoutes);
+const apiVersion = 'v1';
 app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/upload`, uploadRoutes);
-app.use(`/api/${apiVersion}/search`, searchRoutes);
-app.use(`/api/${apiVersion}/documents`, moderationRoutes);
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
-app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
+app.use(`/api/${apiVersion}/report`, reportedFile);
+app.use (`/api/${apiVersion}/documents`, documents);
+app.use(`/api/${apiVersion}/auth`, authRoutes);
+app.use(`/api/${apiVersion}/moderation`, moderationRoutes);
+app.use(`/api/${apiVersion}/fileRating`, fileRating);
+app.use(`/api/${apiVersion}/analytics`, analyticsRoutes);
+
 
 // Swagger setup
 setupSwagger(app);
