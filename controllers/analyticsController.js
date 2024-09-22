@@ -197,3 +197,28 @@ exports.getReportedDocsPerPeriod = async (req, res) => {
         res.status(500).json({ error: 'Error fetching reported documents' });
     }
 };
+
+// Get document counts by status per day
+exports.getDocumentCountsByStatusPerDay = async (req, res) => {
+    const { start_date, end_date } = req.query;
+    try {
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('start_date', sql.Date, start_date)
+            .input('end_date', sql.Date, end_date)
+            .query(`
+                SELECT 
+                    CAST(created_at AS DATE) AS date, 
+                    status, 
+                    COUNT(*) AS count 
+                FROM [dbo].[DOCUMENT]
+                WHERE created_at BETWEEN @start_date AND @end_date
+                GROUP BY CAST(created_at AS DATE), status
+                ORDER BY date, status
+            `);
+        res.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Error fetching document counts by status per day:', error);
+        res.status(500).json({ error: 'Error fetching document counts by status per day' });
+    }
+};
