@@ -130,6 +130,7 @@ const getDeniedDocuments = async (req, res) => {
                 d.university, 
                 d.category, 
                 d.academicYear, 
+                nd.denial_comments,
                 d.userId AS documentUserId,
                 nd.datetime_of_denial
             FROM DOCUMENT d

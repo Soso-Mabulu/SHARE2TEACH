@@ -432,62 +432,59 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: success
-                  documents:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Document'
-        '404':
-          description: No approved documents found.
-        '500':
-          description: Failed to retrieve approved documents.
-
-  /api/v1/documents/denied:
-    get:
-      summary: Get denied documents
-      description: Retrieve a list of all denied documents.
-      tags:
-        - Documents
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: A list of denied documents.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
+                    example: "Internal Server Error"
+                  error:
                     type: string
-                    example: success
-                  documents:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Document'
-        '404':
-          description: No denied documents found.
-        '500':
-          description: Failed to retrieve denied documents.
-
-  /api/v1/documents/{docId}:
+                    example: "Error message details"
+                    
+  /api/v1/documents/pending:
     get:
-      summary: Get document by ID
-      description: Retrieve a document by its ID.
+      summary: "Get Pending Documents"
+      description: "Retrieve a list of documents with a status of 'pending'."
       tags:
-        - Documents
-      parameters:
-        - in: path
-          name: docId
-          required: true
-          schema:
-            type: string
-            example: "12345"
+        - "Documents"
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: Document successfully moderated.
+          description: "Successful response with a list of pending documents."
+          schema:
+            type: "object"
+            properties:
+              status:
+                type: "string"
+                example: "success"
+              documents:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    docId:
+                      type: "integer"
+                      example: 1
+                    module:
+                      type: "string"
+                      example: "Computer Science"
+                    description:
+                      type: "string"
+                      example: "Introduction to Programming"
+                    location:
+                      type: "string"
+                      example: "https://example.com/docs/1"
+                    university:
+                      type: "string"
+                      example: "North-West University"
+                    category:
+                      type: "string"
+                      example: "Lecture Notes"
+                    academicYear:
+                      type: "string"
+                      example: "2024"
+                    userId:
+                      type: "string"
+                      example: "user123"
+        "404":
+          description: "No pending documents found."
           content:
             application/json:
               schema:
@@ -502,82 +499,6 @@ paths:
           description: Document not found.
         '500':
           description: Failed to retrieve document.
-
-  /api/v1/documents/{docId}/approve:
-    post:
-      summary: Approve a document
-      description: Approve a pending document. Requires admin or moderator role.
-      tags:
-        - Documents
-      parameters:
-        - in: path
-          name: docId
-          required: true
-          schema:
-            type: string
-            example: "12345"
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Document approved successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  message:
-                    type: string
-                    example: Document approved successfully
-        '400':
-          description: Bad request, invalid document ID.
-        '403':
-          description: Forbidden, insufficient privileges.
-        '404':
-          description: Document not found.
-        '500':
-          description: Failed to approve document.
-
-  /api/v1/documents/{docId}/deny:
-    post:
-      summary: Deny a document
-      description: Deny a pending document. Requires admin or moderator role.
-      tags:
-        - Documents
-      parameters:
-        - in: path
-          name: docId
-          required: true
-          schema:
-            type: string
-            example: "12345"
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Document denied successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  message:
-                    type: string
-                    example: Document denied successfully
-        '400':
-          description: Bad request, invalid document ID.
-        '403':
-          description: Forbidden, insufficient privileges.
-        '404':
-          description: Document not found.
-        '500':
-          description: Failed to deny document.
 
   /api/v1/documents/search:
     get:
@@ -755,7 +676,7 @@ paths:
                   enum: [approve, disapprove]
                   description: The action to be taken on the document.
                   example: "approve"
-                comment:
+                comments:
                   type: string
                   description: An optional comment regarding the moderation decision.
                   example: "Document meets all the requirements."
