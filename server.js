@@ -12,6 +12,8 @@ const fileRating = require('./routes/fileRating');
 const reportedFile = require('./routes/Report.js');
 const documents = require('./routes/documents.js');
 const authRoutes = require('./routes/authRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
+
 
 // Create express app
 const app = express();
@@ -35,6 +37,7 @@ app.use (`/api/${apiVersion}/documents`, documents);
 app.use(`/api/${apiVersion}/auth`, authRoutes);
 app.use(`/api/${apiVersion}/moderation`, moderationRoutes);
 app.use(`/api/${apiVersion}/fileRating`, fileRating);
+app.use(`/api/${apiVersion}/analytics`, analyticsRoutes);
 
 
 // Swagger setup
