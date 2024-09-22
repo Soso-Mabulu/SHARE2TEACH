@@ -506,7 +506,7 @@ paths:
   /api/v1/documents/search:
     get:
       summary: Search documents
-      description: Search for documents based on a single search term. Accessible to all users.
+      description: Search for documents based on a single search term. Token required for access.
       tags:
         - Documents
       parameters:
@@ -515,7 +515,9 @@ paths:
           required: true
           schema:
             type: string
-            example: "cloud computing"
+            example: "CMPG321"
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Search results.
@@ -533,8 +535,14 @@ paths:
                       $ref: '#/components/schemas/Document'
         '400':
           description: Bad request, invalid query.
+        '401':
+          description: Unauthorized, valid token required.
+        '404':
+          description: No documents found matching the search term.
         '500':
           description: Failed to perform search.
+
+
 
   /api/v1/report:
     post:
@@ -679,7 +687,7 @@ paths:
                   enum: [approve, disapprove]
                   description: The action to be taken on the document.
                   example: "approve"
-                comment:
+                comments:
                   type: string
                   description: An optional comment regarding the moderation decision.
                   example: "Document meets all the requirements."
