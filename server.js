@@ -2,6 +2,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const setupSwagger = require('./routes/swagger');
+const session = require('express-session');
+const passport = require('./config/passport-setup');
+require('dotenv').config();
 
 // Import routes
 const usersRoutes = require('./routes/users');
@@ -14,7 +17,6 @@ const documents = require('./routes/documents.js');
 const authRoutes = require('./routes/authRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 
-
 // Create express app
 const app = express();
 
@@ -25,7 +27,18 @@ app.use(cors({
   allowedHeaders: '*',
   credentials: true,
 }));
+
 app.use(bodyParser.json());
+
+app.use(session({
+  secret: process.env.SESSION_SECRET, // Ensure this is not undefined
+  resave: false,
+  saveUninitialized: true,
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // API routes
 const apiVersion = 'v1';
@@ -33,12 +46,11 @@ app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/upload`, uploadRoutes);
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
 app.use(`/api/${apiVersion}/report`, reportedFile);
-app.use (`/api/${apiVersion}/documents`, documents);
+app.use(`/api/${apiVersion}/documents`, documents);
 app.use(`/api/${apiVersion}/auth`, authRoutes);
 app.use(`/api/${apiVersion}/moderation`, moderationRoutes);
 app.use(`/api/${apiVersion}/fileRating`, fileRating);
 app.use(`/api/${apiVersion}/analytics`, analyticsRoutes);
-
 
 // Swagger setup
 setupSwagger(app);
@@ -48,6 +60,12 @@ app.get('/', (req, res) => {
   res.send(`<h1>Welcome to the Share2Teach Backend API</h1>
             <p>Use the appropriate API endpoints to interact with the system.</p>
             <p>Refer to the <a href="/api-docs">API documentation</a> for more information.</p>`);
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
 // Start server
