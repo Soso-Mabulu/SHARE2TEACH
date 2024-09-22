@@ -3,6 +3,30 @@ const { s3Upload } = require("../utils/azureBlob");
 const connectToDatabase = require("../config/db");
 const jwt = require('jsonwebtoken');
 const { convertToPDF } = require("../utils/conversionUtils");
+const fs = require('fs');
+const path = require('path');
+const { PDFDocument } = require('pdf-lib');
+
+// Function to read the licensing PDF and return it as a buffer
+const readLicensingPDF = async () => {
+    const licensingPdfPath = path.join(__dirname, '../assets', 'licensing.pdf');
+    return fs.readFileSync(licensingPdfPath);
+};
+
+// Function to merge the uploaded PDF with the licensing PDF
+const mergePDFs = async (mainPdf, licensingPdf) => {
+    const mainDoc = await PDFDocument.load(mainPdf);
+    const licensingDoc = await PDFDocument.load(licensingPdf);
+    const mergedDoc = await PDFDocument.create();
+
+    const mainPages = await mergedDoc.copyPages(mainDoc, mainDoc.getPageIndices());
+    mainPages.forEach((page) => mergedDoc.addPage(page));
+
+    const [licensingPage] = await mergedDoc.copyPages(licensingDoc, [0]);
+    mergedDoc.addPage(licensingPage);
+
+    return await mergedDoc.save();
+};
 
 const uploadFiles = async (req, res) => {
     let connection;
@@ -56,8 +80,14 @@ const uploadFiles = async (req, res) => {
             return res.status(500).json({ message: "Failed to convert file to PDF" });
         }
 
-        // Upload PDF to Azure Blob Storage
-        const url = await s3Upload({ originalname: `${file.originalname.replace(/\.[^/.]+$/, "")}.pdf`, buffer: pdfBuffer });
+        // Read the licensing PDF
+        const licensingBuffer = await readLicensingPDF();
+
+        // Merge the uploaded PDF with the licensing PDF
+        const mergedPdfBuffer = await mergePDFs(pdfBuffer, licensingBuffer);
+
+        // Upload the merged PDF to Azure Blob Storage
+        const url = await s3Upload({ originalname: `${file.originalname.replace(/\.[^/.]+$/, "")}.pdf`, buffer: mergedPdfBuffer });
 
         if (!url) {
             return res.status(500).json({ message: "Failed to upload PDF to Azure Blob Storage" });
@@ -73,10 +103,10 @@ const uploadFiles = async (req, res) => {
             .input('category', sql.VarChar, category)
             .input('academicYear', sql.VarChar, academicYear)
             .input('userId', sql.Int, userId)
-            .input('fileSize', sql.BigInt, pdfBuffer.length) // Use the size of the PDF buffer
+            .input('fileSize', sql.BigInt, mergedPdfBuffer.length) // Use the size of the merged PDF buffer
             .input('fileType', sql.VarChar, 'application/pdf') // File type is PDF
             .input('fileName', sql.VarChar, `${file.originalname.replace(/\.[^/.]+$/, "")}.pdf`) // Update file name to include .pdf extension
-            .input('pageCount', sql.Int, metadata.pageCount)
+            .input('pageCount', sql.Int, metadata.pageCount + 1) // Increment page count for licensing page
             .input('author', sql.VarChar, metadata.author || null)
             .input('creationDate', sql.DateTime, metadata.creationDate || null)
             .input('modificationDate', sql.DateTime, metadata.modificationDate || null);
@@ -104,11 +134,7 @@ const uploadFiles = async (req, res) => {
     } catch (err) {
         console.error('Unexpected error:', err);
         res.status(500).json({ message: "Failed to process file upload", error: err.message });
-    }/* finally {
-        if (connection) {
-            await connection.close();
-        }
-    }*/
+    }
 };
 
 module.exports = { uploadFiles };
