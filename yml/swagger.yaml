@@ -268,7 +268,7 @@ paths:
       summary: Upload a document
       tags:
         - Documents
-      description: Allows educators, moderators, and admins to upload documents. The file is uploaded to Azure Blob Storage, and the metadata is stored in the database. User ID is extracted from the JWT.
+      description: Allows educators, moderators, and admins to upload documents. The file is uploaded and converted to PDF if necessary, and the metadata is extracted.
       security:
         - bearerAuth: []
       requestBody:
@@ -283,7 +283,7 @@ paths:
                   items:
                     type: string
                     format: binary
-                  description: The files to upload. Only PDF files are allowed.
+                  description: The files to upload. Supported formats: PDF, DOCX, XLSX, PPTX.
                 module:
                   type: string
                   description: The module associated with the document.
