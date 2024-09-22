@@ -1,24 +1,32 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db'); // Import your MySQL config
+const connectToDatabase = require('../config/db'); // Import your MSSQL config
 const authorize = require('../middleware/authorize');
 
 // Middleware to ensure only admins can access this route
 router.use(authorize('admin'));
 
 // GET /users - Retrieve all users
-router.get('/', (req, res) => {
-    db.query('SELECT userId, userName, email, userType FROM User', (err, results) => {
-        if (err) {
-            console.error('Error retrieving users:', err);
-            return res.status(500).json({ message: 'Internal Server Error' });
+router.get('/', async (req, res) => {
+    let db;
+    try {
+        db = await connectToDatabase(); // Establish the database connection
+        const request = db.request();
+        const result = await request.query('SELECT userId, userName, email, userType FROM [User]');
+        
+        res.status(200).json(result.recordset); // MSSQL returns the result in `recordset`
+    } catch (err) {
+        console.error('Error retrieving users:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    } finally {
+        if (db) {
+            db.close(); // Close the connection to prevent memory leaks
         }
-        res.status(200).json(results);
-    });
+    }
 });
 
 // PUT /users/:userId - Update a user's type
-router.put('/:userId', (req, res) => {
+router.put('/:userId', async (req, res) => {
     const { userId } = req.params;
     const { userType } = req.body;
 
@@ -28,18 +36,30 @@ router.put('/:userId', (req, res) => {
         return res.status(400).json({ message: 'Invalid user type provided' });
     }
 
-    db.query('UPDATE User SET userType = ? WHERE userId = ?', [userType, userId], (err, results) => {
-        if (err) {
-            console.error('Error updating user type:', err);
-            return res.status(500).json({ message: 'Internal Server Error' });
-        }
+    let db;
+    try {
+        db = await connectToDatabase(); // Establish the database connection
+        const request = db.request();
 
-        if (results.affectedRows === 0) {
+        // Use parameterized queries to prevent SQL injection
+        request.input('userType', userType);
+        request.input('userId', userId);
+
+        const result = await request.query('UPDATE [User] SET userType = @userType WHERE userId = @userId');
+
+        if (result.rowsAffected[0] === 0) {
             return res.status(404).json({ message: 'User not found' });
         }
 
         res.status(200).json({ message: 'User type updated successfully' });
-    });
+    } catch (err) {
+        console.error('Error updating user type:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    } finally {
+        if (db) {
+            db.close(); // Close the connection to prevent memory leaks
+        }
+    }
 });
 
 module.exports = router;
