@@ -5,7 +5,7 @@ const sql = require('mssql');
 const authorize = require('../middleware/authorize');
 
 // Get all FAQs
-router.get('/', authorize(['public access user', 'admin']), async (req, res) => {
+router.get('/', authorize(['public', 'admin']), async (req, res) => {
   try {
     const pool = await connect();
     const result = await pool.request().query('SELECT * FROM FAQ');
@@ -16,9 +16,9 @@ router.get('/', authorize(['public access user', 'admin']), async (req, res) => 
   }
 });
 
-// Search FAQs (accessible by both users and admins)
-router.get('/search/:term', authorize(['public access user', 'admin']), async (req, res) => {
-  const { term } = req.params;
+// Search FAQs 
+router.get('/search', async (req, res) => {
+  const { term } = req.query;
   try {
     const pool = await connect();
     const result = await pool.request()
@@ -32,7 +32,7 @@ router.get('/search/:term', authorize(['public access user', 'admin']), async (r
 });
 
 // Get a single FAQ by ID (accessible by both users and admins)
-router.get('/:faqId', authorize(['public access user', 'admin']), async (req, res) => {
+/*router.get('/:faqId', authorize(['public access user', 'admin']), async (req, res) => {
   const { faqId } = req.params;
   try {
     const pool = await connect();
@@ -48,9 +48,9 @@ router.get('/:faqId', authorize(['public access user', 'admin']), async (req, re
     res.status(500).send(err);
   }
 });
-
+*/
 // Create a new FAQ (admin only)
-router.post('/', authorize('admin'), async (req, res) => {
+router.post('/newfaq', authorize('admin'), async (req, res) => {
   const { question, answer } = req.body;
   try {
     const pool = await connect();
@@ -104,7 +104,7 @@ router.delete('/:faqId', authorize('admin'), async (req, res) => {
   }
 });
 
-router.post('/rating/:faqId', authorize('public access user'), async (req, res) => {
+router.post('/rating/:faqId', authorize('public'), async (req, res) => {
   const { faqId } = req.params;
   const { userId, rating } = req.body;
 
@@ -157,6 +157,7 @@ router.post('/rating/:faqId', authorize('public access user'), async (req, res) 
     console.error('Database error:', err);
     res.status(500).send('An error occurred');
   }
+  
 });
 
 module.exports = router;

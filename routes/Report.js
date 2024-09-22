@@ -4,7 +4,7 @@ const { reportFile, denyReport } = require('../controllers/fileReportController'
 const authorize = require('../middleware/authorize');
 
 
-router.use(authorize('public'));
+router.use(authorize(['public','educator', 'moderator', 'admin']));
 
 // Report a file
 router.post('/', reportFile);

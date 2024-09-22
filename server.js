@@ -2,19 +2,20 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const setupSwagger = require('./routes/swagger');
+const session = require('express-session');
+const passport = require('./config/passport-setup');
+require('dotenv').config();
 
 // Import routes
-const signupRoutes = require('./routes/signup');
-const signinRoutes = require('./routes/signin');
-const protectedRoutes = require('./routes/protected');
 const usersRoutes = require('./routes/users');
 const uploadRoutes = require('./routes/uploadRoutes');
-const searchRoutes = require('./routes/searchDocuments');
 const moderationRoutes = require('./routes/moderationRoutes');
 const faqRoutes = require('./routes/faq');
 const fileRating = require('./routes/fileRating');
-const passwordResetRoutes = require('./routes/passreset');
 const reportedFile = require('./routes/Report.js');
+const documents = require('./routes/documents.js');
+const authRoutes = require('./routes/authRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 // Create express app
 const app = express();
@@ -26,22 +27,30 @@ app.use(cors({
   allowedHeaders: '*',
   credentials: true,
 }));
+
 app.use(bodyParser.json());
+
+app.use(session({
+  secret: process.env.SESSION_SECRET, // Ensure this is not undefined
+  resave: false,
+  saveUninitialized: true,
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // API routes
 const apiVersion = 'v1';
-app.use(`/api/${apiVersion}/signup`, signupRoutes);
-app.use(`/api/${apiVersion}/signin`, signinRoutes);
-app.use(`/api/${apiVersion}/protected`, protectedRoutes);
 app.use(`/api/${apiVersion}/users`, usersRoutes);
 app.use(`/api/${apiVersion}/upload`, uploadRoutes);
-app.use(`/api/${apiVersion}/search`, searchRoutes);
-app.use(`/api/${apiVersion}/documents`, moderationRoutes);
 app.use(`/api/${apiVersion}/faq`, faqRoutes);
-app.use(`/api/${apiVersion}/fileRating`, fileRating);
-app.use(`/api/${apiVersion}/password-reset`, passwordResetRoutes);
 app.use(`/api/${apiVersion}/report`, reportedFile);
-
+app.use(`/api/${apiVersion}/documents`, documents);
+app.use(`/api/${apiVersion}/auth`, authRoutes);
+app.use(`/api/${apiVersion}/moderation`, moderationRoutes);
+app.use(`/api/${apiVersion}/fileRating`, fileRating);
+app.use(`/api/${apiVersion}/analytics`, analyticsRoutes);
 
 // Swagger setup
 setupSwagger(app);
@@ -51,6 +60,12 @@ app.get('/', (req, res) => {
   res.send(`<h1>Welcome to the Share2Teach Backend API</h1>
             <p>Use the appropriate API endpoints to interact with the system.</p>
             <p>Refer to the <a href="/api-docs">API documentation</a> for more information.</p>`);
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
 });
 
 // Start server

@@ -17,7 +17,7 @@ info:
         port:
           default: "3000"
 paths:
-  /api/v1/signup:
+  /api/v1/auth/signup:
     post:
       summary: Register a new user
       tags:
@@ -67,7 +67,7 @@ paths:
         "409":
           description: Conflict, email already exists
 
-  /api/v1/signin:
+  /api/v1/auth/login:
     post:
       summary: Sign in a user
       tags:
@@ -108,8 +108,8 @@ paths:
                     example: "User signed in successfully"
         "401":
           description: Unauthorized, invalid credentials
-
-  /api/v1/password-reset/password-reset-request:
+  
+  /api/v1/auth/password-reset-request:
     post:
       summary: Request a password reset
       tags:
@@ -144,7 +144,7 @@ paths:
         "404":
           description: Email not found
 
-  /api/v1/password-reset/reset-password:
+  /api/v1/auth/reset-password:
     post:
       summary: Reset password
       tags:
@@ -330,190 +330,161 @@ paths:
         "500":
           description: Internal server error.
 
-  /api/v1/search:
+  /api/v1/documents:
     get:
-      summary: "Search Documents"
-      description: "Retrieve documents based on search criteria such as module, description, university, category, or academic year. Public users can only view approved documents, while moderators and admins can search for documents of any status."
-      tags:
-        - "Documents"
-      parameters:
-        - name: search
-          in: query
-          description: "Search term to filter documents by module, description, university, category, or academic year."
-          required: false
-          schema:
-            type: string
-      security:
-        - bearerAuth: [] # Ensures JWT is provided for authentication
-      responses:
-        "200":
-          description: "Successful response with a list of documents matching the search criteria."
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    docId:
-                      type: integer
-                      example: 1
-                    module:
-                      type: string
-                      example: "Computer Science"
-                    description:
-                      type: string
-                      example: "Introduction to Programming"
-                    status:
-                      type: string
-                      example: "approved"
-                    location:
-                      type: string
-                      example: "https://example.com/docs/1"
-                    university:
-                      type: string
-                      example: "North-West University"
-                    category:
-                      type: string
-                      example: "Lecture Notes"
-                    academicYear:
-                      type: string
-                      example: "2024"
-                    userId:
-                      type: string
-                      example: "user123"
-        "403":
-          description: "Forbidden: Insufficient privileges to access documents."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Forbidden: Insufficient privileges."
-        "404":
-          description: "No documents found matching the search criteria."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "No documents found matching the search criteria."
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Internal Server Error"
-                  error:
-                    type: string
-                    example: "Error message details"
-
-  /api/v1/documents/pending:
-    get:
-      summary: "Get Pending Documents"
-      description: "Retrieve a list of documents with a status of 'pending'."
-      tags:
-        - "Documents"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: "Successful response with a list of pending documents."
-          schema:
-            type: "object"
-            properties:
-              status:
-                type: "string"
-                example: "success"
-              documents:
-                type: "array"
-                items:
-                  type: "object"
-                  properties:
-                    docId:
-                      type: "integer"
-                      example: 1
-                    module:
-                      type: "string"
-                      example: "Computer Science"
-                    description:
-                      type: "string"
-                      example: "Introduction to Programming"
-                    location:
-                      type: "string"
-                      example: "https://example.com/docs/1"
-                    university:
-                      type: "string"
-                      example: "North-West University"
-                    category:
-                      type: "string"
-                      example: "Lecture Notes"
-                    academicYear:
-                      type: "string"
-                      example: "2024"
-                    userId:
-                      type: "string"
-                      example: "user123"
-        "404":
-          description: "No pending documents found."
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "No pending documents found."
-        "500":
-          description: "Internal server error"
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  message:
-                    type: "string"
-                    example: "Internal Server Error"
-                  error:
-                    type: "string"
-                    example: "Error message details"
-
-  /api/v1/documents/{docId}:
-    post:
-      summary: Moderate a document (approve or deny)
-      description: "Allows a moderator to approve or deny a document. When approved, the document is moved to the APPROVED_DOCUMENT table. When denied, it's moved to the DENIED_DOCUMENT table."
+      summary: Get all documents
+      description: Retrieve a list of all documents based on the user's role.
       tags:
         - Documents
       security:
         - bearerAuth: []
+      responses:
+        '200':
+          description: A list of documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No documents found.
+        '500':
+          description: Failed to retrieve documents.
+
+  /api/v1/documents/pending:
+    get:
+      summary: Get pending documents
+      description: Retrieve a list of all pending documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of pending documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No pending documents found.
+        '500':
+          description: Failed to retrieve pending documents.
+
+  /api/v1/documents/reported:
+    get:
+      summary: Get reported documents
+      description: Retrieve a list of all reported documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of reported documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No reported documents found.
+        '500':
+          description: Failed to retrieve reported documents.
+
+  /api/v1/documents/approved:
+    get:
+      summary: Get approved documents
+      description: Retrieve a list of all approved documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of approved documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No approved documents found.
+        '500':
+          description: Failed to retrieve approved documents.
+
+  /api/v1/documents/denied:
+    get:
+      summary: Get denied documents
+      description: Retrieve a list of all denied documents.
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of denied documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '404':
+          description: No denied documents found.
+        '500':
+          description: Failed to retrieve denied documents.
+
+  /api/v1/documents/{docId}:
+    get:
+      summary: Get document by ID
+      description: Retrieve a document by its ID.
+      tags:
+        - Documents
       parameters:
         - in: path
           name: docId
           required: true
           schema:
-            type: integer
-            example: 1
-          description: "The ID of the document to be moderated."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                action:
-                  type: string
-                  enum: [approve, deny]
-                  example: approve
-                  description: "Action to be taken on the document."
+            type: string
+            example: "12345"
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: Document successfully moderated.
@@ -522,15 +493,56 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
+                  status:
                     type: string
-                    example: "Document successfully approved."
-        "400":
-          description: Invalid action or missing parameters.
-        "404":
-          description: Document not found or already moderated.
-        "500":
-          description: Internal server error.
+                    example: success
+                  document:
+                    $ref: '#/components/schemas/Document'
+        '404':
+          description: Document not found.
+        '500':
+          description: Failed to retrieve document.
+
+  /api/v1/documents/search:
+    get:
+      summary: Search documents
+      description: Search for documents based on a single search term. Token required for access.
+      tags:
+        - Documents
+      parameters:
+        - in: query
+          name: search
+          required: true
+          schema:
+            type: string
+            example: "CMPG321"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Search results.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+        '400':
+          description: Bad request, invalid query.
+        '401':
+          description: Unauthorized, valid token required.
+        '404':
+          description: No documents found matching the search term.
+        '500':
+          description: Failed to perform search.
+
+
 
   /api/v1/report:
     post:
@@ -651,6 +663,49 @@ paths:
         "500":
           description: Server error.
 
+  /api/v1/moderation:
+    post:
+      summary: Moderate a document
+      description: Allows a moderator to approve or deny a document. If approved, the document is moved to the APPROVED_DOCUMENT table; if denied, it is moved to the DENIED_DOCUMENT table. Requires moderator role.
+      tags:
+        - Moderation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                docid:
+                  type: integer
+                  description: The ID of the document to be moderated.
+                  example: 1
+                action:
+                  type: string
+                  enum: [approve, disapprove]
+                  description: The action to be taken on the document.
+                  example: "approve"
+                comments:
+                  type: string
+                  description: An optional comment regarding the moderation decision.
+                  example: "Document meets all the requirements."
+              required:
+                - docid
+                - action
+      responses:
+        '200':
+          description: Document moderated successfully.
+        '400':
+          description: Bad request, invalid action or docid.
+        '403':
+          description: Forbidden, insufficient privileges.
+        '404':
+          description: Document not found.
+        '500':
+          description: Internal server error.
+
   /api/v1/faq/:
     get:
       summary: Get all FAQs
@@ -684,16 +739,14 @@ paths:
         "500":
           description: Server error.
 
-  /api/v1/faq/search/term:
+  /api/v1/faq/search:
     get:
       summary: Search FAQs
-      description: "Search FAQs by term, accessible by both public access users and admins."
+      description: "Search FAQs by a term in the question or answer. Accessible by both public access users and admins."
       tags:
         - FAQ
-      security:
-        - bearerAuth: []
       parameters:
-        - in: path
+        - in: query
           name: term
           required: true
           schema:
@@ -725,50 +778,11 @@ paths:
         "500":
           description: Server error.
 
-  /api/v1/faq/faqId:
-    get:
-      summary: Get a single FAQ by ID
-      description: "Retrieve a single FAQ by ID, accessible by both public access users and admins."
-      tags:
-        - FAQ
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: faqId
-          required: true
-          schema:
-            type: integer
-            example: 1
-          description: "The ID of the FAQ to retrieve."
-      responses:
-        "200":
-          description: The requested FAQ.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  faqId:
-                    type: integer
-                    example: 1
-                    description: "The FAQ ID."
-                  question:
-                    type: string
-                    example: "What is Share2Teach?"
-                    description: "The FAQ question."
-                  answer:
-                    type: string
-                    example: "Share2Teach is a platform for sharing educational resources."
-                    description: "The FAQ answer."
-        "404":
-          description: FAQ not found.
-        "500":
-          description: Server error.
 
+  /api/v1/faq/update/faqId:
     put:
       summary: Update an FAQ
-      description: "Update an FAQ by ID, accessible by admins only."
+      description: "Update an FAQ by its ID. This operation is accessible only by admins."
       tags:
         - FAQ
       security:
@@ -787,6 +801,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - question
+                - answer
               properties:
                 question:
                   type: string
@@ -821,9 +838,10 @@ paths:
         "500":
           description: Server error.
 
+  /api/v1/faq/delete/faqId:
     delete:
       summary: Delete an FAQ
-      description: "Delete an FAQ by ID, accessible by admins only."
+      description: "Delete an FAQ by its ID. This operation is accessible only by admins."
       tags:
         - FAQ
       security:
@@ -838,26 +856,30 @@ paths:
           description: "The ID of the FAQ to delete."
       responses:
         "204":
-          description: FAQ deleted successfully.
+          description: FAQ deleted successfully. No content is returned.
         "404":
           description: FAQ not found.
         "500":
           description: Server error.
 
-  /api/v1/faq/:
+  /api/v1/faq/newfaq:
     post:
       summary: Create a new FAQ
-      description: "Create a new FAQ, accessible by admins only."
+      description: "Create a new FAQ. This operation is accessible only by admins."
       tags:
         - FAQ
       security:
         - bearerAuth: []
       requestBody:
+        description: "Data needed to create a new FAQ."
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - question
+                - answer
               properties:
                 question:
                   type: string
@@ -869,7 +891,7 @@ paths:
                   description: "The FAQ answer."
       responses:
         "201":
-          description: FAQ created successfully.
+          description: "FAQ created successfully."
           content:
             application/json:
               schema:
@@ -878,22 +900,24 @@ paths:
                   faqId:
                     type: integer
                     example: 1
-                    description: "The FAQ ID."
+                    description: "The ID of the newly created FAQ."
                   question:
                     type: string
                     example: "What is Share2Teach?"
-                    description: "The FAQ question."
+                    description: "The question of the newly created FAQ."
                   answer:
                     type: string
                     example: "Share2Teach is a platform for sharing educational resources."
-                    description: "The FAQ answer."
+                    description: "The answer of the newly created FAQ."
+        "400":
+          description: Bad request. Validation error or missing required fields.
         "500":
-          description: Server error.
+          description: Internal server error.
 
   /api/v1/faq/rating/faqId:
     post:
       summary: Rate an FAQ
-      description: "Rate an FAQ by providing FAQ ID, user ID, and rating, accessible by public access users."
+      description: "Rate an FAQ by providing the FAQ ID, user ID, and rating. Accessible by public access users."
       tags:
         - FAQ
       security:
@@ -920,6 +944,8 @@ paths:
                 rating:
                   type: integer
                   example: 4
+                  minimum: 0
+                  maximum: 5
                   description: "The rating given to the FAQ (0-5)."
       responses:
         "200":
@@ -933,15 +959,305 @@ paths:
                     type: string
                     example: "Rating submitted successfully."
         "400":
-          description: Invalid input or rating already exists."
+          description: "Invalid input or rating already exists. Rating must be between 0 and 5."
         "404":
-          description: FAQ or user not found."
+          description: "FAQ or user not found."
         "500":
-          description: Server error."
+          description: "Server error."
 
+  # Existing paths omitted for brevity
+
+  /api/v1/analytics/approved-documents:
+    get:
+      summary: Get total number of approved documents
+      tags:
+        - Analytics
+      description: Returns the count of approved documents.
+      responses:
+        "200":
+          description: Approved documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  approved_count:
+                    type: integer
+                    example: 120
+
+  /api/v1/analytics/denied-documents:
+    get:
+      summary: Get total number of denied documents
+      tags:
+        - Analytics
+      description: Returns the count of denied documents.
+      responses:
+        "200":
+          description: Denied documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  denied_count:
+                    type: integer
+                    example: 45
+
+  /api/v1/analytics/reported-documents:
+    get:
+      summary: Get total number of reported documents
+      tags:
+        - Analytics
+      description: Returns the count of reported documents.
+      responses:
+        "200":
+          description: Reported documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reported_count:
+                    type: integer
+                    example: 10
+
+  /api/v1/analytics/pending-documents:
+    get:
+      summary: Get total number of pending documents
+      tags:
+        - Analytics
+      description: Returns the count of pending documents.
+      responses:
+        "200":
+          description: Pending documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pending_count:
+                    type: integer
+                    example: 80
+
+  /api/v1/analytics/total-users:
+    get:
+      summary: Get total number of users
+      tags:
+        - Analytics
+      description: Returns the total number of registered users.
+      responses:
+        "200":
+          description: Total user count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_count:
+                    type: integer
+                    example: 300
+
+  /api/v1/analytics/active-users:
+    get:
+      summary: Get total number of active users
+      tags:
+        - Analytics
+      description: Returns the number of active users in the last 30 days.
+      responses:
+        "200":
+          description: Active user count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active_users:
+                    type: integer
+                    example: 150
+
+  /api/v1/analytics/user-signups:
+    get:
+      summary: Get number of user signups for a time period
+      tags:
+        - Analytics
+      description: Returns the number of new user signups within a specified time range.
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+          required: true
+          description: Start date for the time range.
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+          required: true
+          description: End date for the time range.
+      responses:
+        "200":
+          description: User signups count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  signups:
+                    type: integer
+                    example: 40
+
+  /api/v1/analytics/ratings-per-time-period:
+    get:
+      summary: Get average ratings over a time period
+      tags:
+        - Analytics
+      description: Returns the average rating and the total number of ratings within a time period.
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+          required: true
+          description: Start date for the time range.
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+          required: true
+          description: End date for the time range.
+      responses:
+        "200":
+          description: Ratings metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  average_rating:
+                    type: number
+                    format: float
+                    example: 4.5
+                  total_ratings:
+                    type: integer
+                    example: 50
+
+  /api/v1/analytics/uploaded-documents:
+    get:
+      summary: Get uploaded documents in a time period
+      tags:
+        - Analytics
+      description: Returns the total number of uploaded documents within a specified time period.
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+          required: true
+          description: Start date for the time range.
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+          required: true
+          description: End date for the time range.
+      responses:
+        "200":
+          description: Uploaded documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploaded_docs:
+                    type: integer
+                    example: 30
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    Document:
+      type: object
+      properties:
+        docId:
+          type: integer
+          example: 123
+        module:
+          type: string
+          example: Mathematics
+        description:
+          type: string
+          example: "An introduction to algebra"
+        location:
+          type: string
+          example: "Room 101"
+        university:
+          type: string
+          example: "University of Example"
+        category:
+          type: string
+          example: "Math"
+        academicYear:
+          type: string
+          example: "2023/2024"
+        documentUserId:
+          type: integer
+          example: 567
+        fileName:
+          type: string
+          example: "algebra_101.pdf"
+        fileType:
+          type: string
+          example: "pdf"
+        fileSize:
+          type: string
+          example: "2MB"
+        pageCount:
+          type: integer
+          example: 45
+        author:
+          type: string
+          example: "John Doe"
+        creationDate:
+          type: string
+          format: date-time
+          example: "2023-05-12T08:40:00Z"
+        modificationDate:
+          type: string
+          format: date-time
+          example: "2023-06-01T08:40:00Z"
+        documentStatus:
+          type: string
+          example: "approved"
+        datetime_of_approval:
+          type: string
+          format: date-time
+          example: "2023-06-02T09:00:00Z"
+        datetime_of_denial:
+          type: string
+          format: date-time
+          example: "2023-06-03T09:00:00Z"
+        reporterUserId:
+          type: integer
+          example: 789
+        report_details:
+          type: string
+          example: "Inappropriate content"
+        report_timestamp:
+          type: string
+          format: date-time
+          example: "2023-06-01T10:15:00Z"
