@@ -268,7 +268,7 @@ paths:
       summary: Upload a document
       tags:
         - Documents
-      description: Allows educators, moderators, and admins to upload documents. The file is uploaded to Azure Blob Storage, and the metadata is stored in the database. User ID is extracted from the JWT.
+      description: Allows educators, moderators, and admins to upload documents. The file is uploaded and converted to PDF if necessary, and the metadata is extracted.
       security:
         - bearerAuth: []
       requestBody:
@@ -283,7 +283,7 @@ paths:
                   items:
                     type: string
                     format: binary
-                  description: The files to upload. Only PDF files are allowed.
+                  description: The files to upload. Supported formats: PDF, DOCX, XLSX, PPTX.
                 module:
                   type: string
                   description: The module associated with the document.
@@ -503,86 +503,10 @@ paths:
         '500':
           description: Failed to retrieve document.
 
-  /api/v1/documents/{docId}/approve:
-    post:
-      summary: Approve a document
-      description: Approve a pending document. Requires admin or moderator role.
-      tags:
-        - Documents
-      parameters:
-        - in: path
-          name: docId
-          required: true
-          schema:
-            type: string
-            example: "12345"
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Document approved successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  message:
-                    type: string
-                    example: Document approved successfully
-        '400':
-          description: Bad request, invalid document ID.
-        '403':
-          description: Forbidden, insufficient privileges.
-        '404':
-          description: Document not found.
-        '500':
-          description: Failed to approve document.
-
-  /api/v1/documents/{docId}/deny:
-    post:
-      summary: Deny a document
-      description: Deny a pending document. Requires admin or moderator role.
-      tags:
-        - Documents
-      parameters:
-        - in: path
-          name: docId
-          required: true
-          schema:
-            type: string
-            example: "12345"
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Document denied successfully.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  message:
-                    type: string
-                    example: Document denied successfully
-        '400':
-          description: Bad request, invalid document ID.
-        '403':
-          description: Forbidden, insufficient privileges.
-        '404':
-          description: Document not found.
-        '500':
-          description: Failed to deny document.
-
   /api/v1/documents/search:
     get:
       summary: Search documents
-      description: Search for documents based on a single search term. Accessible to all users.
+      description: Search for documents based on a single search term. Token required for access.
       tags:
         - Documents
       parameters:
@@ -591,7 +515,9 @@ paths:
           required: true
           schema:
             type: string
-            example: "cloud computing"
+            example: "CMPG321"
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Search results.
@@ -609,8 +535,14 @@ paths:
                       $ref: '#/components/schemas/Document'
         '400':
           description: Bad request, invalid query.
+        '401':
+          description: Unauthorized, valid token required.
+        '404':
+          description: No documents found matching the search term.
         '500':
           description: Failed to perform search.
+
+
 
   /api/v1/report:
     post:
@@ -755,7 +687,7 @@ paths:
                   enum: [approve, disapprove]
                   description: The action to be taken on the document.
                   example: "approve"
-                comment:
+                comments:
                   type: string
                   description: An optional comment regarding the moderation decision.
                   example: "Document meets all the requirements."
@@ -1032,6 +964,225 @@ paths:
           description: "FAQ or user not found."
         "500":
           description: "Server error."
+
+  # Existing paths omitted for brevity
+
+  /api/v1/analytics/approved-documents:
+    get:
+      summary: Get total number of approved documents
+      tags:
+        - Analytics
+      description: Returns the count of approved documents.
+      responses:
+        "200":
+          description: Approved documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  approved_count:
+                    type: integer
+                    example: 120
+
+  /api/v1/analytics/denied-documents:
+    get:
+      summary: Get total number of denied documents
+      tags:
+        - Analytics
+      description: Returns the count of denied documents.
+      responses:
+        "200":
+          description: Denied documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  denied_count:
+                    type: integer
+                    example: 45
+
+  /api/v1/analytics/reported-documents:
+    get:
+      summary: Get total number of reported documents
+      tags:
+        - Analytics
+      description: Returns the count of reported documents.
+      responses:
+        "200":
+          description: Reported documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reported_count:
+                    type: integer
+                    example: 10
+
+  /api/v1/analytics/pending-documents:
+    get:
+      summary: Get total number of pending documents
+      tags:
+        - Analytics
+      description: Returns the count of pending documents.
+      responses:
+        "200":
+          description: Pending documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pending_count:
+                    type: integer
+                    example: 80
+
+  /api/v1/analytics/total-users:
+    get:
+      summary: Get total number of users
+      tags:
+        - Analytics
+      description: Returns the total number of registered users.
+      responses:
+        "200":
+          description: Total user count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_count:
+                    type: integer
+                    example: 300
+
+  /api/v1/analytics/active-users:
+    get:
+      summary: Get total number of active users
+      tags:
+        - Analytics
+      description: Returns the number of active users in the last 30 days.
+      responses:
+        "200":
+          description: Active user count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active_users:
+                    type: integer
+                    example: 150
+
+  /api/v1/analytics/user-signups:
+    get:
+      summary: Get number of user signups for a time period
+      tags:
+        - Analytics
+      description: Returns the number of new user signups within a specified time range.
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+          required: true
+          description: Start date for the time range.
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+          required: true
+          description: End date for the time range.
+      responses:
+        "200":
+          description: User signups count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  signups:
+                    type: integer
+                    example: 40
+
+  /api/v1/analytics/ratings-per-time-period:
+    get:
+      summary: Get average ratings over a time period
+      tags:
+        - Analytics
+      description: Returns the average rating and the total number of ratings within a time period.
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+          required: true
+          description: Start date for the time range.
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+          required: true
+          description: End date for the time range.
+      responses:
+        "200":
+          description: Ratings metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  average_rating:
+                    type: number
+                    format: float
+                    example: 4.5
+                  total_ratings:
+                    type: integer
+                    example: 50
+
+  /api/v1/analytics/uploaded-documents:
+    get:
+      summary: Get uploaded documents in a time period
+      tags:
+        - Analytics
+      description: Returns the total number of uploaded documents within a specified time period.
+      parameters:
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+            example: "2024-01-01"
+          required: true
+          description: Start date for the time range.
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+            example: "2024-12-31"
+          required: true
+          description: End date for the time range.
+      responses:
+        "200":
+          description: Uploaded documents count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uploaded_docs:
+                    type: integer
+                    example: 30
 components:
   securitySchemes:
     bearerAuth:
