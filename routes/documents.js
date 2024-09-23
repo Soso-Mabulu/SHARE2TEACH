@@ -8,19 +8,19 @@ const authorize = require('../middleware/authorize');
 router.get('/',authorize(['educator', 'moderator', 'admin']), documentController.getAllDocuments);
 
 // Route to get pending documents
-router.get('/pending', documentController.getPendingDocuments);
+router.get('/pending', authorize(['educator', 'moderator', 'admin']), documentController.getPendingDocuments);
 
 // Route to get reported documents
-router.get('/reported', documentController.getReportedDocuments);
+router.get('/reported', authorize(['educator', 'moderator', 'admin']), documentController.getReportedDocuments);
 
 // Route to get denied documents
-router.get('/denied', documentController.getDeniedDocuments);
+router.get('/denied', authorize(['educator', 'moderator', 'admin']), documentController.getDeniedDocuments);
 
 // Route to get approved documents
-router.get('/approved', documentController.getApprovedDocuments);
+router.get('/approved', authorize(['educator', 'moderator', 'admin']), documentController.getApprovedDocuments);
 
 // Route to search for documents
-router.get('/search', documentController.searchDocuments);
+router.get('/search',authorize(['educator', 'moderator', 'admin', 'public']), documentController.searchDocuments);
 
 
 // Route to get a document by ID

@@ -130,6 +130,7 @@ const getDeniedDocuments = async (req, res) => {
                 d.university, 
                 d.category, 
                 d.academicYear, 
+                nd.denial_comments,
                 d.userId AS documentUserId,
                 nd.datetime_of_denial
             FROM DOCUMENT d
@@ -231,17 +232,19 @@ const getDocumentById = async (req, res) => {
         res.status(500).json({ message: 'Failed to retrieve document', error: err.message });
     }
 };
-// Search documents with a single textbox input
+
 const searchDocuments = async (req, res) => {
     const { search } = req.query;
 
     if (!search || search.trim() === '') {
-        // Return a message if the search parameter is empty or just whitespace
         return res.status(400).json({ message: 'Search entry cannot be empty.' });
     }
 
     try {
         const connection = await connectToDatabase();
+        
+        // Get user role from request
+        const userRole = req.user.role; // Ensure this is correctly set in your middleware
 
         // Base query to select documents
         let query = `
@@ -272,13 +275,18 @@ const searchDocuments = async (req, res) => {
             LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
             LEFT JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
             WHERE 
-                d.module LIKE @search OR
+                (d.module LIKE @search OR
                 d.description LIKE @search OR
                 d.university LIKE @search OR
                 d.author LIKE @search OR
                 d.fileName LIKE @search OR
-                r.report_details LIKE @search
+                r.report_details LIKE @search)
         `;
+
+        // Modify the query based on user role
+        if (userRole === 'public') {
+            query += ` AND d.status = 'approved' `;
+        }
 
         const request = new sql.Request(connection);
         request.input('search', sql.VarChar, `%${search.trim()}%`);
@@ -295,6 +303,7 @@ const searchDocuments = async (req, res) => {
         res.status(500).json({ message: 'Failed to search documents', error: err.message });
     }
 };
+
 
 
 module.exports = {
