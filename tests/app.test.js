@@ -408,7 +408,121 @@ describe('FAQ API Tests', () => {
     expect(response.text).toBe('User not found');
   });*/
 });
+describe('File Reporting Endpoint Tests', () => {
+  let adminToken;
 
+  beforeAll(async () => {
+    
+    const adminCredentials = {
+      email: 'jane.doe@example.com',
+      password: 'password1234'
+    };
+
+    const adminResponse = await request(app)
+      .post('/api/v1/auth/login')
+      .send(adminCredentials);
+
+    expect(adminResponse.statusCode).toBe(200);
+    adminToken = adminResponse.body.token;
+  });
+
+  it('should return 200 and handle a minor severity report', async () => {
+    const reportData = {
+      fileId: 1, // Use an actual file ID from your test database
+      severity: 'minor',
+      reason: 'Minor infraction details'
+    };
+
+    const response = await request(app)
+      .post('/api/v1/reports')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(reportData);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Minor severity report handled.');
+  });
+/*
+  it('should return 200 and handle a moderate severity report', async () => {
+    const reportData = {
+      fileId: 2, // Use an actual file ID from your test database
+      severity: 'moderate',
+      reason: 'Moderate infraction details'
+    };
+
+    const response = await request(app)
+      .post('/api/v1/reports')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(reportData);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Moderate severity report handled.');
+  });
+
+  it('should return 200 and handle an egregious severity report', async () => {
+    const reportData = {
+      fileId: 3, // Use an actual file ID from your test database
+      severity: 'egregious',
+      reason: 'Egregious infraction details'
+    };
+
+    const response = await request(app)
+      .post('/api/v1/reports')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(reportData);
+
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toHaveProperty('message', 'Egregious severity report handled.');
+  });
+
+  it('should return 400 for an invalid severity level', async () => {
+    const reportData = {
+      fileId: 1,
+      severity: 'invalid_severity', // Invalid severity level
+      reason: 'Invalid severity test'
+    };
+
+    const response = await request(app)
+      .post('/api/v1/reports')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(reportData);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty('error', 'Invalid severity level.');
+  });
+
+  it('should return 404 if file is not found', async () => {
+    const reportData = {
+      fileId: 999, // Non-existent file ID
+      severity: 'minor',
+      reason: 'File not found test'
+    };
+
+    const response = await request(app)
+      .post('/api/v1/reports')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(reportData);
+
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toHaveProperty('error', 'File not found.');
+  });
+
+  it('should return 403 if unauthorized user tries to report', async () => {
+    const reportData = {
+      fileId: 1,
+      severity: 'minor',
+      reason: 'Unauthorized user test'
+    };
+
+    const response = await request(app)
+      .post('/api/v1/reports')
+      .send(reportData); // No token provided
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body).toHaveProperty('error', 'Unauthorized access.');
+  });
+});
+
+*/
 afterAll(async () => {
   console.log('Closing server and database connection...');
   await new Promise((resolve, reject) => {
