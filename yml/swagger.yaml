@@ -542,51 +542,51 @@ paths:
         '500':
           description: Failed to perform search.
 
-
-
   /api/v1/report:
     post:
+      summary: Report a file
+      description: Endpoint to report a file by providing the document ID, report details, and severity level.
       tags:
-        - "File Reporting"
-      summary: "Report a file"
-      description: "Endpoint to report a file by providing file ID, user ID, and report details."
+        - File Reporting
       consumes:
-        - "application/json"
+        - application/json
       produces:
-        - "application/json"
+        - application/json
       parameters:
-        - name: "body"
-          in: "body"
-          description: "File report details"
+        - in: body
+          name: body
+          description: File report details
           required: true
           schema:
-            type: "object"
+            type: object
             properties:
               docId:
-                type: "integer"
+                type: integer
                 example: 123
-                description: "The document ID being reported."
-              userId:
-                type: "integer"
-                example: 456
-                description: "The user ID reporting the document."
+                description: The document ID being reported.
               report_details:
-                type: "string"
-                example: "Inappropriate content"
-                description: "Details of the report."
+                type: string
+                example: Inappropriate content
+                description: Details of the report.
+              severity_level:
+                type: string
+                example: minor
+                description: The severity level of the infraction ('minor', 'moderate', 'egregious').
       responses:
-        200:
-          description: "File reported successfully."
+        '200':
+          description: File reported successfully.
           schema:
-            type: "object"
+            type: object
             properties:
               message:
-                type: "string"
-                example: "File reported successfully."
-        400:
-          description: "Invalid input."
-        500:
-          description: "Server error."
+                type: string
+                example: File reported successfully.
+        '400':
+          description: Invalid input.
+        '401':
+          description: Unauthorized. No or invalid token.
+        '500':
+          description: Server error.
 
   /api/v1/fileRating:
     post:
