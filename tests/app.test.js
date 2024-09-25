@@ -116,9 +116,11 @@ describe('Moderation Endpoint Tests', () => {
   
 });
 
-describe('Document Rating API Testcs', () => {
+describe('Document Rating API Tests', () => {
   let adminToken;
   let userToken;
+  let pool;
+  let query;
 
   beforeAll(async () => {
     // Fetch a valid token using admin credentials
@@ -148,7 +150,7 @@ describe('Document Rating API Testcs', () => {
     userToken = userResponse.body.token;
   });
 
-  /*it('should rate a document successfully', async () => {
+    /*it('should rate a document successfully', async () => {
     const ratingData = {
       docId:13,  // Replace with an actual docId from your test database
       userId: 17, // Replace with an actual userId from your test database
@@ -226,7 +228,11 @@ it('should get all ratings as admin', async () => {
 
     expect(response.statusCode).toBe(403);
   });*/
+
 });
+
+
+
 
 describe('FAQ API Tests', () => {
   let adminToken;
