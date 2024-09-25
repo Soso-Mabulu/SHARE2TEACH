@@ -1056,6 +1056,8 @@ paths:
       summary: Get total number of approved documents
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the count of approved documents.
       responses:
         "200":
@@ -1074,6 +1076,8 @@ paths:
       summary: Get total number of denied documents
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the count of denied documents.
       responses:
         "200":
@@ -1092,6 +1096,8 @@ paths:
       summary: Get total number of reported documents
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the count of reported documents.
       responses:
         "200":
@@ -1110,6 +1116,8 @@ paths:
       summary: Get total number of pending documents
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the count of pending documents.
       responses:
         "200":
@@ -1128,6 +1136,8 @@ paths:
       summary: Get total number of users
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the total number of registered users.
       responses:
         "200":
@@ -1146,6 +1156,8 @@ paths:
       summary: Get total number of active users
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the number of active users in the last 30 days.
       responses:
         "200":
@@ -1164,6 +1176,8 @@ paths:
       summary: Get number of user signups for a time period
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the number of new user signups within a specified time range.
       parameters:
         - in: query
@@ -1199,6 +1213,8 @@ paths:
       summary: Get average ratings over a time period
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the average rating and the total number of ratings within a time period.
       parameters:
         - in: query
@@ -1238,6 +1254,8 @@ paths:
       summary: Get uploaded documents in a time period
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the total number of uploaded documents within a specified time period.
       parameters:
         - in: query
