@@ -61,6 +61,9 @@ const moderateFile = async (req, res) => {
         INSERT INTO APPROVED_DOCUMENT (docid, datetime_of_approval)
         VALUES (@docid, @now);
 
+        DELETE FROM PENDING_DOCUMENT
+        WHERE docid = @docId
+
         COMMIT TRANSACTION;
       `;
     } else {
@@ -76,6 +79,9 @@ const moderateFile = async (req, res) => {
         INSERT INTO DENIED_DOCUMENT (docid, datetime_of_denial, denial_comments)
         VALUES (@docid, @now, @comments);
 
+        DELETE FROM PENDING_DOCUMENT
+        WHERE docid = @docId
+        
         COMMIT TRANSACTION;
       `;
       inputs.comments = sql.VarChar;

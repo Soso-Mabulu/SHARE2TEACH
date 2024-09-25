@@ -543,50 +543,54 @@ paths:
           description: Failed to perform search.
 
   /api/v1/report:
-    post:
-      summary: Report a file
-      description: Endpoint to report a file by providing the document ID, report details, and severity level.
-      tags:
-        - File Reporting
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: body
-          description: File report details
-          required: true
-          schema:
-            type: object
-            properties:
-              docId:
-                type: integer
-                example: 123
-                description: The document ID being reported.
-              report_details:
-                type: string
-                example: Inappropriate content
-                description: Details of the report.
-              severity_level:
-                type: string
-                example: minor
-                description: The severity level of the infraction ('minor', 'moderate', 'egregious').
-      responses:
-        '200':
-          description: File reported successfully.
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: File reported successfully.
-        '400':
-          description: Invalid input.
-        '401':
-          description: Unauthorized. No or invalid token.
-        '500':
-          description: Server error.
+      post:
+        summary: Report a file
+        description: Endpoint to report a file by providing the document ID, report details, and severity level.
+        tags:
+          - File Reporting
+        security:
+          - bearerAuth: []  # Indicate that this endpoint requires bearer token authorization
+        consumes:
+          - application/json
+        produces:
+          - application/json
+        parameters:
+          - in: body
+            name: body
+            description: File report details
+            required: true
+            schema:
+              type: object
+              properties:
+                docId:
+                  type: integer
+                  example: 123
+                  description: The document ID being reported.
+                reporting_details:
+                  type: string
+                  example: Inappropriate content
+                  description: Details of the report.
+                severity_level:
+                  type: string
+                  example: minor
+                  description: The severity level of the infraction ('minor', 'moderate', 'egregious').
+        responses:
+          '200':
+            description: File reported successfully.
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: File reported successfully.
+          '400':
+            description: Invalid input. The document ID may not exist, or the user has already reported this document.
+          '404':
+            description: Document not found in approved documents.
+          '401':
+            description: Unauthorized. No or invalid token provided.
+          '500':
+            description: Server error. Failed to report file due to an internal error.
 
   /api/v1/fileRating:
     post:
