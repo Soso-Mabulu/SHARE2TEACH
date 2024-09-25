@@ -7,10 +7,11 @@ const connectToDatabase = require('../config/db');
 const getAllDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
-
-        // Get user role from request (assuming it's stored in req.user.role)
-        const userRole = req.user.role; // Update this based on how you store user role in the request
-
+    
+        // Get user role and userId from request (assuming they're stored in req.user)
+        const userRole = req.user.role; // Update based on how you store user role
+        const userId = req.user.id; // Update based on how you store user ID
+    
         // Base query to select documents
         let query = `
             SELECT 
@@ -24,8 +25,8 @@ const getAllDocuments = async (req, res) => {
                 d.userId AS documentUserId,
                 d.status AS documentStatus,
                 r.userId AS reporterUserId,
-                r.report_details,
-                r.report_timestamp,
+                r.reporting_details,
+                r.reporting_timestamp,
                 nd.datetime_of_denial,
                 a.datetime_of_approval
             FROM DOCUMENT d
@@ -33,19 +34,23 @@ const getAllDocuments = async (req, res) => {
             LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
             LEFT JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
         `;
-
+    
         // Modify the query based on user role
         if (userRole === 'public' || userRole === 'educator') {
-            query += ` WHERE d.status = 'approved' `;
+            query += ` WHERE d.status = 'approved' AND NOT EXISTS ( 
+                SELECT 1 FROM DOCUMENT_REPORTING rr 
+                WHERE rr.docId = d.docId AND rr.userId = @userId 
+            ) `;
         }
-
+    
         const request = new sql.Request(connection);
+        request.input('userId', sql.Int, userId); // Add userId as a parameter
         const result = await request.query(query);
-
+    
         if (!result.recordset.length) {
             return res.status(404).json({ message: 'No documents found.' });
         }
-
+    
         res.status(200).json({ status: 'success', documents: result.recordset });
     } catch (err) {
         console.error('Error retrieving documents:', err);
@@ -53,11 +58,13 @@ const getAllDocuments = async (req, res) => {
     }
 };
 
-
 // Get pending documents
 const getPendingDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
+
+        const userRole = req.user.role; // Update based on how you store user role
+        const userId = req.user.id; // Update based on how you store user ID
 
         const query = `
             SELECT docId, module, description, location, university, category, academicYear, userId
@@ -84,6 +91,8 @@ const getReportedDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
 
+        const userRole = req.user.role; // Update based on how you store user role
+        const userId = req.user.id; // Update based on how you store user ID
         const query = `
             SELECT 
                 d.docId, 
@@ -95,8 +104,8 @@ const getReportedDocuments = async (req, res) => {
                 d.academicYear, 
                 d.userId AS documentUserId,
                 r.userId AS reporterUserId,
-                r.report_details,
-                r.report_timestamp
+                r.reporting_details,
+                r.reporting_timestamp
             FROM DOCUMENT d
             INNER JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
         `;
@@ -121,6 +130,8 @@ const getDeniedDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
 
+        const userRole = req.user.role; // Update based on how you store user role
+        const userId = req.user.id; // Update based on how you store user ID
         const query = `
             SELECT 
                 d.docId, 
@@ -158,35 +169,75 @@ const getApprovedDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
 
-        const query = `
-            SELECT 
-                d.docId, 
-                d.module, 
-                d.description, 
-                d.location, 
-                d.university, 
-                d.category, 
-                d.academicYear, 
-                d.userId AS documentUserId,
-                a.datetime_of_approval
-            FROM DOCUMENT d
-            INNER JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
-            WHERE d.status = 'approved'
-        `;
-        
-        const request = new sql.Request(connection);
-        const result = await request.query(query);
+        const userRole = req.user.role; // Get user role from the request
 
+        // Declare query variable
+        let query;
+
+        // Construct the query based on user role
+        if (userRole === 'public' || userRole === 'educator') {
+            query = `
+                SELECT 
+                    d.module, 
+                    d.description, 
+                    d.location, 
+                    d.university, 
+                    d.category, 
+                    d.academicYear,
+                    d.fileName,
+                    d.fileType,
+                    d.fileSize,
+                    d.pageCount,
+                    d.author,
+                    d.creationDate,
+                    d.modificationDate
+                FROM DOCUMENT d
+                WHERE d.status = 'approved'
+            `;
+        } else {
+            // For moderators and admins, retrieve all fields
+            query = `
+                SELECT 
+                    d.docId, 
+                    d.module, 
+                    d.description, 
+                    d.location, 
+                    d.university, 
+                    d.category, 
+                    d.academicYear, 
+                    d.userId AS documentUserId,
+                    d.fileName,
+                    d.fileType,
+                    d.fileSize,
+                    d.pageCount,
+                    d.author,
+                    d.creationDate,
+                    d.modificationDate
+                FROM DOCUMENT d
+                INNER JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
+                WHERE d.status = 'approved'
+            `;
+        }
+
+        // Prepare and execute the SQL query
+        const request = new sql.Request(connection);
+        const result = await request.query(query); // Execute the query
+
+        // Check if the result set has records
         if (!result.recordset.length) {
             return res.status(404).json({ message: 'No approved documents found.' });
         }
 
+        // Respond with the result
         res.status(200).json({ status: 'success', documents: result.recordset });
     } catch (err) {
         console.error('Error retrieving approved documents:', err);
         res.status(500).json({ message: 'Failed to retrieve approved documents', error: err.message });
     }
 };
+
+
+
 
 // Get a document by ID
 // Get a document by ID with all related details
@@ -195,7 +246,9 @@ const getDocumentById = async (req, res) => {
     try {
         const connection = await connectToDatabase();
 
-        const query = `
+        const userRole = req.user.role; // Update based on how you store user role
+
+        let query = `
             SELECT 
                 d.docId, 
                 d.module, 
@@ -205,19 +258,26 @@ const getDocumentById = async (req, res) => {
                 d.category, 
                 d.academicYear, 
                 d.userId AS documentUserId,
+                d.fileName,
+                d.fileType,
+                d.fileSize,
+                d.pageCount,
+                d.author,
+                d.creationDate,
+                d.modificationDate,
                 d.status AS documentStatus,
                 r.userId AS reporterUserId,
-                r.report_details,
-                r.report_timestamp,
+                r.reporting_details,
+                r.reporting_timestamp,
                 nd.datetime_of_denial,
                 a.datetime_of_approval
             FROM DOCUMENT d
             LEFT JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
             LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
             LEFT JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
-            WHERE d.docId = @docId
-        `;
-
+            WHERE d.docId = @docId`
+        
+        
         const request = new sql.Request(connection);
         request.input('docId', sql.Int, id);  // Adjust the type based on your schema, might be sql.Int or sql.VarChar
         const result = await request.query(query);
@@ -245,9 +305,10 @@ const searchDocuments = async (req, res) => {
         
         // Get user role from request
         const userRole = req.user.role; // Ensure this is correctly set in your middleware
-
+        let query;
         // Base query to select documents
-        let query = `
+        if (userRole === 'admin' || userRole === 'moderator'){
+            query = `
             SELECT 
                 d.docId, 
                 d.module, 
@@ -266,8 +327,8 @@ const searchDocuments = async (req, res) => {
                 d.modificationDate,
                 d.status AS documentStatus,
                 r.userId AS reporterUserId,
-                r.report_details,
-                r.report_timestamp,
+                r.reporting_details,
+                r.reporting_timestamp,
                 nd.datetime_of_denial,
                 a.datetime_of_approval
             FROM DOCUMENT d
@@ -280,13 +341,40 @@ const searchDocuments = async (req, res) => {
                 d.university LIKE @search OR
                 d.author LIKE @search OR
                 d.fileName LIKE @search OR
-                r.report_details LIKE @search)
+                r.reporting_details LIKE @search)
         `;
+        }
+       
 
         // Modify the query based on user role
-        if (userRole === 'public') {
-            query += ` AND d.status = 'approved' `;
-        }
+        else{
+            query = `
+                SELECT 
+                    d.module, 
+                    d.description, 
+                    d.university, 
+                    d.category, 
+                    d.academicYear, 
+                    d.fileName,
+                    d.fileType,
+                    d.fileSize,
+                    d.pageCount,
+                    d.author,
+                    d.creationDate,
+                    d.modificationDate
+                FROM DOCUMENT d
+                LEFT JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
+                LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
+                LEFT JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
+                WHERE 
+                    (d.module LIKE @search OR
+                    d.description LIKE @search OR
+                    d.university LIKE @search OR
+                    d.author LIKE @search OR
+                    d.fileName LIKE @search)
+                AND d.status = 'approved'
+            `;
+        } 
 
         const request = new sql.Request(connection);
         request.input('search', sql.VarChar, `%${search.trim()}%`);
@@ -303,7 +391,6 @@ const searchDocuments = async (req, res) => {
         res.status(500).json({ message: 'Failed to search documents', error: err.message });
     }
 };
-
 
 
 module.exports = {
