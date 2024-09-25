@@ -24,15 +24,24 @@ const authorize = (roles = []) => {
         });
       });
 
+      // Log the decoded user object
+      console.log('Decoded user from token:', user);
+
       // Check if user role is authorized
       if (roles.length && !roles.includes(user.role)) {
         return res.status(403).json({ message: 'Forbidden: Insufficient privileges' });
       }
 
-      // Attach user information to request object
-      req.user = user;
+      // Attach user information (including userId) to request object
+      req.user = {
+        userId: user.id,// Extract the userId from the token
+        role: user.userType // Extract role (or any other data in the token)
+      };
+
+      console.log('User ID attached to request:', req.user.userId); // Log the userId
       next();
     } catch (error) {
+      console.error('Authorization error:', error);
       return res.status(401).json({ message: 'Unauthorized', error });
     }
   };
