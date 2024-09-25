@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const authorize = require('../middleware/authorize');
 const analyticsController = require('../controllers/analyticsController');
 
+router.use(authorize('admin'));
 // Document status counts
 router.get('/approved-documents', analyticsController.getApprovedDocuments);
 router.get('/denied-documents', analyticsController.getDeniedDocuments);
