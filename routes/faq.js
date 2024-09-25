@@ -103,7 +103,7 @@ router.delete('/:faqId', authorize('admin'), async (req, res) => {
     res.status(500).send(err);
   }
 });
-
+//Rate a faq
 router.post('/rating/:faqId', authorize('public'), async (req, res) => {
   const { faqId } = req.params;
   const { userId, rating } = req.body;
