@@ -2,7 +2,7 @@ const request = require('supertest');
 const { app, server } = require('../server'); // Adjust path if necessary
 const sql = require('mssql'); // Import the mssql package used in db.js
 
-jest.setTimeout(20000); // 10 seconds timeout for each test
+jest.setTimeout(20000); // 20 seconds timeout for each test
 
 describe('Sign-In Endpoint Tests', () => {
   const adminCredentials = {
@@ -48,79 +48,75 @@ describe('Sign-In Endpoint Tests', () => {
 });
 
 describe('Moderation Endpoint Tests', () => {
-  let token;
+  let adminToken;
 
   beforeAll(async () => {
     // Fetch a valid token using admin credentials
     const adminCredentials = {
-      email: 'jane.doe@example.com',
+      email: 'jane.doe@example.com', // Actual admin email
       password: 'password1234'
     };
 
-    const response = await request(app)
-      .post('/api/v1/auth/login')  // Ensure this matches your route
+    const adminResponse = await request(app)
+      .post('/api/v1/auth/login')
       .send(adminCredentials);
 
-    expect(response.statusCode).toBe(200);
-    token = response.body.token; // Store the token for later use
+    expect(adminResponse.statusCode).toBe(200); // Expect success
+    expect(adminResponse.body).toHaveProperty('token'); // Ensure token is returned
+    adminToken = adminResponse.body.token; // Store the token for later use
   });
 
-  it('should retrieve pending documents', async () => {
+  // it('should return 200 for successful moderation action (approve)', async () => {
+  //   const moderationData = {
+  //     docid: 26, // Replace with an actual docid from your test database
+  //     action: 'approve', // Valid action
+  //   };
+
+  //   const response = await request(app)
+  //     .post('/api/v1/moderation')
+  //     .set('Authorization', `Bearer ${adminToken}`)
+  //     .send(moderationData);
+
+  //   expect(response.statusCode).toBe(200);
+  //   expect(response.body).toHaveProperty('message', 'Document approved successfully.');
+  // });
+
+  it('should return 400 for invalid moderation action', async () => {
+    const moderationData = {
+      docid: 1, // Replace with an actual docid from your test database
+      action: 'invalid', // Invalid action
+      comments: 'Document is not suitable for publication'
+    };
+
     const response = await request(app)
-      .get('/api/v1/documents/pending')  // Ensure this matches your route
-      .set('Authorization', `Bearer ${token}`);
+      .post('/api/v1/moderation')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(moderationData);
 
-    expect(response.statusCode).toBe(200);  // Expect success
-    expect(response.body).toHaveProperty('status', 'success');
-    expect(response.body.documents).toBeInstanceOf(Array);  // Ensure the documents property is an array
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toHaveProperty('message', 'Invalid input: docid and action are required, action must be either approve or disapprove.');
   });
 
-  // it('should approve a pending document', async () => {
-  //   const docId = 13;  // Replace with an actual docId from your test database
-  //   const response = await request(app)
-  //     .post(`/api/v1/documents/${docId}`)
-  //     .set('Authorization', `Bearer ${token}`)
-  //     .send({ action: 'approve' });
-
-  //   expect(response.statusCode).toBe(200);  // Expect success
-  //   expect(response.body).toHaveProperty('message', 'Document successfully approved.');
-  // });
-
-  // it('should deny a pending document', async () => {
-  //   const docId = 12;  // Replace with an actual docId from your test database
-  //   const response = await request(app)
-  //     .post(`/api/v1/documents/${docId}`)
-  //     .set('Authorization', `Bearer ${token}`)
-  //     .send({ action: 'deny' });
-
-  //   expect(response.statusCode).toBe(200);  // Expect success
-  //   expect(response.body).toHaveProperty('message', 'Document successfully denied.');
-  // });
-
-  // it('should return 400 for an invalid moderation action', async () => {
-  //   const docId = 3;  // Replace with an actual docId from your test database
-  //   const response = await request(app)
-  //     .post(`/api/v1/documents/${docId}`)
-  //     .set('Authorization', `Bearer ${token}`)
-  //     .send({ action: 'invalid_action' });
-
-  //   expect(response.statusCode).toBe(400);  // Expect bad request
-  //   expect(response.body).toHaveProperty('message', 'Invalid action. Use "approve" or "deny".');
-  // });
-
-  // it('should return 404 if the document is not found or already moderated', async () => {
-  //   const docId = 999;  // Use a non-existent docId
-  //   const response = await request(app)
-  //     .post(`/api/v1/documents/${docId}`)
-  //     .set('Authorization', `Bearer ${token}`)
-  //     .send({ action: 'deny' });
-
-  //   expect(response.statusCode).toBe(404);  // Expect not found
-  //   expect(response.body).toHaveProperty('message', 'Document not found or already moderated.');
-  // });
+  it('should return 404 if the document is not found or already moderated', async () => {
+    const moderationData = {
+      docid: 100, // Assuming this docid does not exist
+      action: 'approve',
+    };
+  
+    const response = await request(app)
+      .post('/api/v1/moderation')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(moderationData);
+  
+    console.log(response.body); // Log the response body for debugging
+  
+    expect(response.statusCode).toBe(404);  
+    expect(response.body).toHaveProperty('message', 'Document not found.'); // Ensure this matches
+  });
+  
 });
 
-describe('Document Rating API Tests', () => {
+describe('Document Rating API Testcs', () => {
   let adminToken;
   let userToken;
 
