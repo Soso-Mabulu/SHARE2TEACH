@@ -37,9 +37,32 @@ const moderateFile = async (req, res) => {
 
     const currentStatus = documentCheckResult.recordset[0].status;
 
-    // Check if the document has already been moderated
-    if (currentStatus === 'approved' || currentStatus === 'denied') {
-      return res.status(400).json({ message: `Document has already been ${currentStatus}.` });
+    // Prevent re-approval of denied documents
+    if (action === 'approve' && currentStatus === 'denied') {
+      return res.status(400).json({ message: 'This document has already been denied and cannot be approved.' });
+    }
+
+    // Prevent re-disapproval of approved documents
+    if (action === 'disapprove' && currentStatus === 'approved') {
+      return res.status(400).json({ message: 'This document has already been approved and cannot be disapproved.' });
+    }
+
+    // Check if the document exists in the DOCUMENT_REPORTING table with a severity level
+    const reportedDocumentCheckQuery = `
+      SELECT severity_level
+      FROM DOCUMENT_REPORTING
+      WHERE docId = @docid;
+    `;
+
+    const reportedDocumentCheckResult = await pool.request()
+      .input('docid', sql.Int, docid)
+      .query(reportedDocumentCheckQuery);
+
+    const isReported = reportedDocumentCheckResult.recordset.length > 0;
+
+    // If the document is already approved and has been reported, skip the approval process
+    if (currentStatus === 'approved' && isReported && action === 'approve') {
+      return res.status(200).json({ message: 'Document is already approved and reported. No further actions taken.' });
     }
 
     let query;
@@ -52,21 +75,26 @@ const moderateFile = async (req, res) => {
       query = `
         BEGIN TRANSACTION;
         
-        -- Update document status
-        UPDATE DOCUMENT 
-        SET status = 'approved'
-        WHERE docid = @docid;
+        -- Update document status only if it is not already approved
+        IF NOT EXISTS (SELECT 1 FROM APPROVED_DOCUMENT WHERE docid = @docid)
+        BEGIN
+          UPDATE DOCUMENT 
+          SET status = 'approved'
+          WHERE docid = @docid;
 
-        -- Insert into APPROVED_DOCUMENT
-        INSERT INTO APPROVED_DOCUMENT (docid, datetime_of_approval)
-        VALUES (@docid, @now);
+          -- Insert into APPROVED_DOCUMENT
+          INSERT INTO APPROVED_DOCUMENT (docid, datetime_of_approval)
+          VALUES (@docid, @now);
 
-        DELETE FROM PENDING_DOCUMENT
-        WHERE docid = @docId
+          -- Delete from PENDING_DOCUMENT
+          DELETE FROM PENDING_DOCUMENT
+          WHERE docid = @docid;
+        END
 
         COMMIT TRANSACTION;
       `;
     } else {
+      // For disapproval: Insert into DENIED_DOCUMENT, delete from PENDING_DOCUMENT, and remove from DOCUMENT_REPORTING
       query = `
         BEGIN TRANSACTION;
 
@@ -79,9 +107,14 @@ const moderateFile = async (req, res) => {
         INSERT INTO DENIED_DOCUMENT (docid, datetime_of_denial, denial_comments)
         VALUES (@docid, @now, @comments);
 
+        -- Delete from PENDING_DOCUMENT
         DELETE FROM PENDING_DOCUMENT
-        WHERE docid = @docId
-        
+        WHERE docid = @docid;
+
+        -- Delete from DOCUMENT_REPORTING
+        DELETE FROM DOCUMENT_REPORTING
+        WHERE docid = @docid;
+
         COMMIT TRANSACTION;
       `;
       inputs.comments = sql.VarChar;
@@ -100,6 +133,15 @@ const moderateFile = async (req, res) => {
 
     res.status(200).json({ message: `Document ${action}d successfully.` });
   } catch (err) {
+    // Enhanced error handling for primary key violation
+    if (err.message.includes('Violation of PRIMARY KEY constraint') && err.message.includes('DENIED_DOCUMENT')) {
+      return res.status(400).json({ message: 'Document is already denied.' });
+    }
+
+    if (err.message.includes('Violation of PRIMARY KEY constraint') && err.message.includes('APPROVED_DOCUMENT')) {
+      return res.status(400).json({ message: 'Document is already approved.' });
+    }
+
     console.error('Moderation Error:', err.message);
     res.status(500).json({ message: 'Failed to moderate document', error: err.message });
   }
