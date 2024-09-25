@@ -361,7 +361,10 @@ function getMediaType(filePath) {
 
 // Convert HTML content to PDF using Puppeteer
 async function htmlToPDF(htmlContent) {
-    const browser = await puppeteer.launch();
+    
+    const browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox'], // Add these arguments
+    });
     const page = await browser.newPage();
     await page.setContent(htmlContent);
     const pdfBuffer = await page.pdf({ format: 'A4' });
