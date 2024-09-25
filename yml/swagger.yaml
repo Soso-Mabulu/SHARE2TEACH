@@ -667,48 +667,83 @@ paths:
         "500":
           description: Server error.
 
-  /api/v1/moderation:
-    post:
-      summary: Moderate a document
-      description: Allows a moderator to approve or deny a document. If approved, the document is moved to the APPROVED_DOCUMENT table; if denied, it is moved to the DENIED_DOCUMENT table. Requires moderator role.
-      tags:
-        - Moderation
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
+/api/v1/moderation:
+  post:
+    summary: Moderate a document
+    description: Allows a moderator to approve or deny a document. If approved, the document is moved to the `APPROVED_DOCUMENT` table; if denied, it is moved to the `DENIED_DOCUMENT` table. Once a document is denied, it cannot be approved again. Similarly, once a document is approved, it cannot be disapproved. Requires moderator role.
+    tags:
+      - Moderation
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              docid:
+                type: integer
+                description: The ID of the document to be moderated.
+                example: 1
+              action:
+                type: string
+                enum: [approve, disapprove]
+                description: The action to be taken on the document. `approve` moves the document to `APPROVED_DOCUMENT`, while `disapprove` moves it to `DENIED_DOCUMENT`.
+                example: "disapprove"
+              comments:
+                type: string
+                description: An optional comment regarding the moderation decision. **Required if the action is `disapprove`.**
+                example: "Document does not meet the required standards."
+            required:
+              - docid
+              - action
+    responses:
+      '200':
+        description: Document moderated successfully.
         content:
           application/json:
             schema:
               type: object
               properties:
-                docid:
-                  type: integer
-                  description: The ID of the document to be moderated.
-                  example: 1
-                action:
+                message:
                   type: string
-                  enum: [approve, disapprove]
-                  description: The action to be taken on the document.
-                  example: "approve"
-                comments:
+                  example: "Document approved successfully."
+      '400':
+        description: Bad request, invalid input, or action cannot be completed due to the current document status.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
                   type: string
-                  description: An optional comment regarding the moderation decision.
-                  example: "Document meets all the requirements."
-              required:
-                - docid
-                - action
-      responses:
-        '200':
-          description: Document moderated successfully.
-        '400':
-          description: Bad request, invalid action or docid.
-        '403':
-          description: Forbidden, insufficient privileges.
-        '404':
-          description: Document not found.
-        '500':
-          description: Internal server error.
+                  example: "This document has already been approved and cannot be disapproved."
+      '404':
+        description: Document not found.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Document not found."
+      '500':
+        description: Internal server error.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Failed to moderate document."
+                error:
+                  type: string
+                  example: "Database error or other failure reason."
+
+
 
   /api/v1/faq/:
     get:
