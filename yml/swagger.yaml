@@ -242,31 +242,72 @@ paths:
                     id:
                       type: integer
                       description: User ID
-                    username:
+                    userName:
                       type: string
-                      description: Username
+                      description: User's first name
+                    userLName:
+                      type: string
+                      description: User's last name
                     email:
                       type: string
                       description: User email
-                    role:
+                    userType:
                       type: string
                       description: User role
                   example:
                     - id: 1
-                      username: "John"
+                      userName: "John"
+                      userLName: "Doe"
                       email: "john.doe@example.com"
-                      role: "admin"
+                      userType: "admin"
         "401":
           description: Unauthorized, no or invalid token
         "403":
           description: Forbidden, insufficient privileges
+
+  /api/v1/users/update:
+    put:
+      summary: Update own user details
+      tags:
+        - Users
+      description: Updates user details (excluding password) for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userName:
+                  type: string
+                  example: "Jane"
+                  description: User's first name
+                userLName:
+                  type: string
+                  example: "Smith"
+                  description: User's last name
+                email:
+                  type: string
+                  example: "jane.smith@example.com"
+                  description: User email
+      responses:
+        "200":
+          description: User details updated successfully
+        "400":
+          description: No fields to update provided
+        "404":
+          description: User not found
+        "500":
+          description: Internal server error
 
   /api/v1/users/{userId}:
     put:
       summary: Update user type
       tags:
         - Users
-      description: Updates the user type (role) of a specific user.
+      description: Updates the user type (role) of a specific user. Requires admin role.
       security:
         - bearerAuth: []
       parameters:
@@ -298,6 +339,28 @@ paths:
         "500":
           description: Internal server error
 
+    delete:
+      summary: Delete a user
+      tags:
+        - Users
+      description: Deletes a specific user by userId. Requires admin role.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            example: "12345"
+      responses:
+        "200":
+          description: User deleted successfully
+        "404":
+          description: User not found
+        "500":
+          description: Internal server error
+          
   /api/v1/upload:
     post:
       summary: Upload a document
