@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const sql = require('mssql');
 const getPool = require('../config/db');
 const generateToken = require('../utils/jwt');
+const { addToken, isBlacklisted } = require('../utils/tokenBlacklist');
 
 // User Sign-Up
 const signUp = async (req, res) => {
@@ -30,7 +31,6 @@ const signUp = async (req, res) => {
       INSERT INTO [User] (userName, userLName, email, userPassword, userType)
       VALUES (@userName, @userLName, @email, @userPassword, @userType)
     `;
-
     const defaultUserType = 'public';
 
     await pool.request()
@@ -71,9 +71,8 @@ const signIn = async (req, res) => {
       WHERE email = @email
     `;
     await pool.request()
-        .input('email', sql.VarChar, email)
-        .query(updateLastLoginQuery);
-
+      .input('email', sql.VarChar, email)
+      .query(updateLastLoginQuery);
 
     const token = generateToken(user);
     res.json({ token });
@@ -85,7 +84,13 @@ const signIn = async (req, res) => {
 
 // Logout
 const logout = (req, res) => {
-  res.status(200).json({ message: 'Logged out successfully' });
+  const token = req.body.token || req.headers.authorization?.split(' ')[1]; // Support token from body or header
+  if (token) {
+    addToken(token); // Add the token to the blacklist
+    res.status(200).json({ message: 'Logout successful' });
+  } else {
+    res.status(400).json({ message: 'No token provided' });
+  }
 };
 
 // Request Password Reset
