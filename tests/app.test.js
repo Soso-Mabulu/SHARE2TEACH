@@ -84,7 +84,8 @@ describe('Moderation Endpoint Tests', () => {
   it('should return 400 for invalid moderation action', async () => {
     const moderationData = {
       docid: 1, // actual doc id 
-      action: 'invalid', // Invalid action'
+      action: 'invalid', // Invalid action
+      comments: 'Document is not suitable for publication'
     };
 
     const response = await request(app)
