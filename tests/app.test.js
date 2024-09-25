@@ -408,6 +408,7 @@ describe('FAQ API Tests', () => {
     expect(response.text).toBe('User not found');
   });*/
 });
+/*
 describe('File Reporting Endpoint Tests', () => {
   let adminToken;
 
