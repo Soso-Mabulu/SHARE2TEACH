@@ -106,7 +106,8 @@ router.delete('/:faqId', authorize('admin'), async (req, res) => {
 //Rate a faq
 router.post('/rating/:faqId', authorize('public'), async (req, res) => {
   const { faqId } = req.params;
-  const { userId, rating } = req.body;
+  const userId = req.user.userId; // Retrieve userId from the authenticated session
+  const { rating } = req.body;
 
   // Validate the rating
   if (rating < 0 || rating > 5) {
@@ -125,7 +126,7 @@ router.post('/rating/:faqId', authorize('public'), async (req, res) => {
       return res.status(404).send('FAQ not found');
     }
 
-    // Check if the user exists
+    // Check if the user exists (optional check, since userId is now taken from the session)
     const userResult = await pool.request()
       .input('userId', sql.Int, userId)
       .query('SELECT * FROM [USER] WHERE userId = @userId');
@@ -134,7 +135,17 @@ router.post('/rating/:faqId', authorize('public'), async (req, res) => {
       return res.status(404).send('User not found');
     }
 
-    // Insert the rating into FAQ_RATING table
+    // Check if the rating already exists for the user and FAQ
+    const existingRatingResult = await pool.request()
+      .input('faqId', sql.Int, faqId)
+      .input('userId', sql.Int, userId)
+      .query('SELECT * FROM FAQ_RATING WHERE faqId = @faqId AND userId = @userId');
+
+    if (existingRatingResult.recordset.length > 0) {
+      return res.status(400).send('Rating already exists for this FAQ');
+    }
+
+    // Insert the rating into the FAQ_RATING table
     await pool.request()
       .input('faqId', sql.Int, faqId)
       .input('userId', sql.Int, userId)
@@ -157,7 +168,7 @@ router.post('/rating/:faqId', authorize('public'), async (req, res) => {
     console.error('Database error:', err);
     res.status(500).send('An error occurred');
   }
-  
 });
+
 
 module.exports = router;

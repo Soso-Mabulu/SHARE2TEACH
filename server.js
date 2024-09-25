@@ -55,7 +55,7 @@ app.use(`/api/${apiVersion}/report`, reportedFile);
 app.use(`/api/${apiVersion}/documents`, documents);
 app.use(`/api/${apiVersion}/auth`, authRoutes);
 app.use(`/api/${apiVersion}/moderation`, moderationRoutes);
-app.use(`/api/${apiVersion}/fileRating`, fileRating);
+app.use(`/api/${apiVersion}/ratings`, fileRating);
 app.use(`/api/${apiVersion}/analytics`, analyticsRoutes);
 
 // Swagger setup

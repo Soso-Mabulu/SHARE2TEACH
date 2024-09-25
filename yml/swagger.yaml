@@ -627,87 +627,104 @@ paths:
           '500':
             description: Server error. Failed to report file due to an internal error.
 
-  /api/v1/fileRating/rate:
-      post:
-        summary: Rate a file
-        description: "Endpoint to rate a file by providing file ID, user ID, and rating."
-        tags:
-          - File Rating
-        security:
-          - bearerAuth: []
-        requestBody:
-          required: true
+
+  
+  /api/v1/ratings:
+    post:
+      summary: Rate a file
+      description: "Endpoint to rate a file by providing file ID and rating."
+      tags:
+        - File Rating
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                docId:
+                  type: integer
+                  example: 123
+                  description: "The document ID being rated."
+                rating:
+                  type: integer
+                  example: 4
+                  description: "The rating given to the document (0-5)."
+      responses:
+        "200":
+          description: Rating added successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  docId:
-                    type: integer
-                    example: 123
-                    description: "The document ID being rated."
-                  userId:
-                    type: integer
-                    example: 456
-                    description: "The user ID rating the document."
-                  rating:
-                    type: integer
-                    example: 4
-                    description: "The rating given to the document (0-5)."
-        responses:
-          "200":
-            description: Rating added successfully.
-            content:
-              application/json:
-                schema:
+                  message:
+                    type: string
+                    example: "Rating added successfully."
+        "400":
+          description: |
+            Invalid input. Possible reasons:
+            - Rating must be between 0 and 5.
+            - Document not found.
+            - Rating already exists for the same document.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid input. Rating must be between 0 and 5."
+        "500":
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Database error: Unable to add rating."
+
+
+    get:
+      summary: Get all ratings
+      description: "Endpoint to retrieve all ratings, authorized for admins."
+      tags:
+        - File Rating
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: A list of all ratings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
                   type: object
                   properties:
-                    message:
-                      type: string
-                      example: "Rating added successfully."
-          "400":
-            description: |
-              Invalid input. Possible reasons:
-              - Rating must be between 0 and 5.
-              - Document not found.
-              - Rating already exists for the same document.
-          "500":
-            description: Server error.
+                    docId:
+                      type: integer
+                      example: 123
+                      description: "The document ID."
+                    rating:
+                      type: integer
+                      example: 4
+                      description: "The rating given to the document."
+        "500":
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Database error: Unable to fetch ratings."
 
-  /api/v1/fileRating/:
-      get:
-        summary: Get all ratings
-        description: "Endpoint to retrieve all ratings, authorized for admins."
-        tags:
-          - File Rating
-        security:
-          - bearerAuth: []
-        responses:
-          "200":
-            description: A list of all ratings.
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      docId:
-                        type: integer
-                        example: 123
-                        description: "The document ID."
-                      userId:
-                        type: integer
-                        example: 456
-                        description: "The user ID."
-                      rating:
-                        type: integer
-                        example: 4
-                        description: "The rating given to the document."
-          "500":
-            description: Server error.
-
-  /api/v1/fileRating/delete:
     delete:
       summary: Delete a rating
       description: "Delete a user's rating for a document. This operation is accessible only by public users."
@@ -723,16 +740,11 @@ paths:
               type: object
               required:
                 - docId
-                - userId
               properties:
                 docId:
                   type: integer
                   example: 101
                   description: "The ID of the document for which the rating is being deleted."
-                userId:
-                  type: integer
-                  example: 123
-                  description: "The ID of the user whose rating is being deleted."
       responses:
         "204":
           description: "Rating deleted successfully. No content is returned."
@@ -757,7 +769,6 @@ paths:
                     type: string
                     example: "Database error: Unable to delete rating."
 
-  /api/v1/fileRating/update:
     put:
       summary: Update a rating
       description: "Update a user's rating for a document. This operation is accessible only by public users."
@@ -773,17 +784,12 @@ paths:
               type: object
               required:
                 - docId
-                - userId
                 - rating
               properties:
                 docId:
                   type: integer
                   example: 101
                   description: "The ID of the document for which the rating is being updated."
-                userId:
-                  type: integer
-                  example: 123
-                  description: "The ID of the user whose rating is being updated."
                 rating:
                   type: integer
                   example: 4
@@ -829,7 +835,7 @@ paths:
                   error:
                     type: string
                     example: "Database error: Unable to update rating."
-              
+
   /api/v1/moderation:
     post:
       summary: Moderate a document
@@ -1156,10 +1162,10 @@ paths:
         "500":
           description: Internal server error.
 
-  /api/v1/faq/rating/faqId:
+  /api/v1/faq/rating/{faqId}:
     post:
       summary: Rate an FAQ
-      description: "Rate an FAQ by providing the FAQ ID, user ID, and rating. Accessible by public access users."
+      description: "Rate an FAQ by providing the FAQ ID and rating. Accessible by public access users."
       tags:
         - FAQ
       security:
@@ -1179,10 +1185,6 @@ paths:
             schema:
               type: object
               properties:
-                userId:
-                  type: integer
-                  example: 456
-                  description: "The user ID rating the FAQ."
                 rating:
                   type: integer
                   example: 4
@@ -1203,31 +1205,31 @@ paths:
         "400":
           description: "Invalid input or rating already exists. Rating must be between 0 and 5."
         "404":
-          description: "FAQ or user not found."
+          description: "FAQ not found."
         "500":
           description: "Server error."
 
-  # Existing paths omitted for brevity
+    # Existing paths omitted for brevity
 
-  /api/v1/analytics/approved-documents:
-    get:
-      summary: Get total number of approved documents
-      tags:
-        - Analytics
-      security:
-        - bearerAuth: []
-      description: Returns the count of approved documents.
-      responses:
-        "200":
-          description: Approved documents count
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  approved_count:
-                    type: integer
-                    example: 120
+    /api/v1/analytics/approved-documents:
+      get:
+        summary: Get total number of approved documents
+        tags:
+          - Analytics
+        security:
+          - bearerAuth: []
+        description: Returns the count of approved documents.
+        responses:
+          "200":
+            description: Approved documents count
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    approved_count:
+                      type: integer
+                      example: 120
 
   /api/v1/analytics/denied-documents:
     get:
