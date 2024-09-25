@@ -186,6 +186,41 @@ paths:
         "500":
           description: Internal server error
 
+  /api/v1/auth/logout:
+    post:
+      summary: Logout a user
+      tags:
+        - Authentication
+      description: Logs out a user by blacklisting the provided JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: The JWT token to be blacklisted.
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              required:
+                - token
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout successful"
+        "400":
+          description: Bad request, no token provided
+        "403":
+          description: Forbidden, token has been invalidated
+
   /api/v1/users:
     get:
       summary: Retrieve a list of all users
@@ -1066,7 +1101,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Database error: Unable to delete FAQ."
+                    example: "Database error: Unable to delete FAQ.."
 
 
   /api/v1/faq/newfaq:
@@ -1179,6 +1214,8 @@ paths:
       summary: Get total number of approved documents
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the count of approved documents.
       responses:
         "200":
@@ -1197,6 +1234,8 @@ paths:
       summary: Get total number of denied documents
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the count of denied documents.
       responses:
         "200":
@@ -1215,6 +1254,8 @@ paths:
       summary: Get total number of reported documents
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the count of reported documents.
       responses:
         "200":
@@ -1233,6 +1274,8 @@ paths:
       summary: Get total number of pending documents
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the count of pending documents.
       responses:
         "200":
@@ -1251,6 +1294,8 @@ paths:
       summary: Get total number of users
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the total number of registered users.
       responses:
         "200":
@@ -1269,6 +1314,8 @@ paths:
       summary: Get total number of active users
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the number of active users in the last 30 days.
       responses:
         "200":
@@ -1287,6 +1334,8 @@ paths:
       summary: Get number of user signups for a time period
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the number of new user signups within a specified time range.
       parameters:
         - in: query
@@ -1322,6 +1371,8 @@ paths:
       summary: Get average ratings over a time period
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the average rating and the total number of ratings within a time period.
       parameters:
         - in: query
@@ -1361,6 +1412,8 @@ paths:
       summary: Get uploaded documents in a time period
       tags:
         - Analytics
+      security:
+        - bearerAuth: []
       description: Returns the total number of uploaded documents within a specified time period.
       parameters:
         - in: query

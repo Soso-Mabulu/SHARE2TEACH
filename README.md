@@ -32,13 +32,23 @@ This is the backend of the Share-2-Teach application, which is built using Expre
 The `.env` file is where you store your environment variables. Create a file in the root of your project called `.env` and add the following variables:
 
    ```plaintext
-    PORT=3000
-    AWS_ACCESS_KEY_ID=your_aws_access_key
-    AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-    AWS_REGION=your_aws_region
-    S3_BUCKET_NAME=your_s3_bucket_name
-    DATABASE_URL=your_database_url
-    JWT_SECRET=your_jwt_secret
+      AZURE_STORAGE_CONNECTION_STRING=your_azure_storage_connection_string
+      AZURE_CONTAINER_NAME=your_azure_container_name
+      
+      DB_HOST=your_database_host
+      DB_USER=your_database_user
+      DB_PASSWORD=your_database_password
+      DB_NAME=your_database_name
+      
+      JWT_SECRET=your_jwt_secret
+      
+      EMAIL_USER=your_email
+      EMAIL_PASS=your_email_password
+      
+      GOOGLE_CLIENT_ID=your_google_client_id
+      GOOGLE_CLIENT_SECRET=your_google_client_secret
+      SESSION_SECRET=your_session_secret
+
    ```
 Replace the placeholders with your actual credentials and configurations.
 
@@ -53,7 +63,7 @@ Ensure you have an S3 bucket set up on AWS and update the `AWS_REGION` and `S3_B
 To start the server, run:
 
  ```bash
- npm start
+ npm run devStart
 ```
 The server will run on the port specified in the `.env` file (default is 3000).
 
@@ -86,5 +96,6 @@ If you'd like to contribute to this project, please fork the repository and use 
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the NWU Intellectual Property Policy. See the [license document](https://www.nwu.ac.za/sites/www.nwu.ac.za/files/files/i-governance-management/policy/2021%20Update/1P_1.1.10_IP/1P_1.1.10_2021_e.pdf) for details.
+
 

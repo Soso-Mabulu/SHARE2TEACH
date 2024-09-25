@@ -18,11 +18,7 @@ router.get('/', async (req, res) => {
     } catch (err) {
         console.error('Error retrieving users:', err);
         res.status(500).json({ message: 'Internal Server Error' });
-    } finally {
-        if (db) {
-            db.close(); // Close the connection to prevent memory leaks
-        }
-    }
+    } 
 });
 
 // PUT /users/:userId - Update a user's type
@@ -55,10 +51,6 @@ router.put('/:userId', async (req, res) => {
     } catch (err) {
         console.error('Error updating user type:', err);
         res.status(500).json({ message: 'Internal Server Error' });
-    } finally {
-        if (db) {
-            db.close(); // Close the connection to prevent memory leaks
-        }
     }
 });
 
