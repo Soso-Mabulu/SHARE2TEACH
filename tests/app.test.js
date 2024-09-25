@@ -405,6 +405,136 @@ describe('FAQ API Tests', () => {
   });*/
 });
 
+
+
+describe('Document API Tests', () => {
+  let adminToken, userToken;
+
+  beforeAll(async () => {
+      const adminCredentials = {
+          email: 'john.doe@example.com',
+          password: 'password123'
+      };
+
+      const userCredentials = {
+          email: 'kamogeloMol@gmail.com',
+          password: 'Strawberry123'
+      };
+
+      // Get admin token
+      const adminResponse = await request(app)
+          .post('/api/v1/auth/login')
+          .send(adminCredentials);
+      adminToken = adminResponse.body.token;
+
+      // Get user token
+      const userResponse = await request(app)
+          .post('/api/v1/auth/login')
+          .send(userCredentials);
+      userToken = userResponse.body.token;
+  });
+
+  it('should retrieve all documents for admin', async () => {
+      const response = await request(app)
+          .get('/api/v1/documents')
+          .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('documents');
+      expect(response.body.documents).toBeInstanceOf(Array);
+  });
+
+  it('should retrieve all approved documents for user', async () => {
+      const response = await request(app)
+          .get('/api/v1/documents/approved')
+          .set('Authorization', `Bearer ${userToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('documents');
+      expect(response.body.documents).toBeInstanceOf(Array);
+  });
+
+  it('should retrieve pending documents for admin', async () => {
+      const response = await request(app)
+          .get('/api/v1/documents/pending')
+          .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('documents');
+      expect(response.body.documents).toBeInstanceOf(Array);
+  });
+
+  it('should retrieve reported documents for admin', async () => {
+      const response = await request(app)
+          .get('/api/v1/documents/reported')
+          .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('documents');
+      expect(response.body.documents).toBeInstanceOf(Array);
+  });
+
+  it('should retrieve denied documents for admin', async () => {
+      const response = await request(app)
+          .get('/api/v1/documents/denied')
+          .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('documents');
+      expect(response.body.documents).toBeInstanceOf(Array);
+  });
+
+  it('should search documents successfully for admin', async () => {
+      const response = await request(app)
+          .get('/api/v1/documents/search?search=cmpg321')
+          .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('documents');
+      expect(response.body.documents).toBeInstanceOf(Array);
+  });
+
+  it('should search documents successfully for user', async () => {
+      const response = await request(app)
+          .get('/api/v1/documents/search?search=cmpg321')
+          .set('Authorization', `Bearer ${userToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('documents');
+      expect(response.body.documents).toBeInstanceOf(Array);
+  });
+
+  it('should return 404 for search with no results for user', async () => {
+      const response = await request(app)
+          .get('/api/v1/documents/search?search=NonExistentTerm')
+          .set('Authorization', `Bearer ${userToken}`);
+
+      expect(response.statusCode).toBe(404);
+      expect(response.body).toHaveProperty('message', 'No documents found based on the search criteria.');
+  });
+
+  it('should get document by ID successfully', async () => {
+      const docId = 1; // valid document Id
+      const response = await request(app)
+          .get(`/api/v1/documents/${docId}`)
+          .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toHaveProperty('document');
+  });
+
+  it('should return 404 for non-existent document ID', async () => {
+    const docId = 999; // non existent document ID
+    const response = await request(app)
+        .get(`/api/v1/documents/${docId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.statusCode).toBe(404);
+      expect(response.body).toHaveProperty('message', 'Document not found.');
+  });
+});
+
+
 afterAll(async () => {
   console.log('Closing server and database connection...');
   await new Promise((resolve, reject) => {
