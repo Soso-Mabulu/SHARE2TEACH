@@ -213,7 +213,7 @@ describe('Document Rating API Tests', () => {
 
 it('should get all ratings as admin', async () => {
   const response = await request(app)
-    .get('/api/v1/fileRating')
+    .get('/api/v1/ratings')
     .set('Authorization', `Bearer ${adminToken}`);
 
   console.log('Get all ratings response:', response.body);
@@ -520,7 +520,7 @@ describe('Document API Tests', () => {
   });
 
   it('should get document by ID successfully', async () => {
-      const docId = 1; // valid document Id
+      const docId = 3; // valid document Id
       const response = await request(app)
           .get(`/api/v1/documents/${docId}`)
           .set('Authorization', `Bearer ${adminToken}`);
