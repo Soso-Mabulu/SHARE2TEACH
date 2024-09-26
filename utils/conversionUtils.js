@@ -363,7 +363,8 @@ function getMediaType(filePath) {
 async function htmlToPDF(htmlContent) {
     
     const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox'], // Add these arguments
+        headless: true,  // Run in headless mode
+        args: ['--no-sandbox', '--disable-setuid-sandbox'], // Additional arguments
     });
     const page = await browser.newPage();
     await page.setContent(htmlContent);
