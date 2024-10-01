@@ -116,120 +116,120 @@ describe('Moderation Endpoint Tests', () => {
   
 });
 
-describe('Document Rating API Tests', () => {
-  let adminToken;
-  let userToken;
-  let pool;
-  let query;
+// describe('Document Rating API Tests', () => {
+//   let adminToken;
+//   let userToken;
+//   let pool;
+//   let query;
 
-  // beforeAll(async () => {
-  //   // Fetch a valid token using admin credentials
-  //   const adminCredentials = {
-  //     email: 'john.doe@example.com',
-  //     password: 'password123'
-  //   };
+//   // beforeAll(async () => {
+//   //   // Fetch a valid token using admin credentials
+//   //   const adminCredentials = {
+//   //     email: 'john.doe@example.com',
+//   //     password: 'password123'
+//   //   };
 
-  //   const adminResponse = await request(app)
-  //     .post('/api/v1/auth/login')
-  //     .send(adminCredentials);
+//   //   const adminResponse = await request(app)
+//   //     .post('/api/v1/auth/login')
+//   //     .send(adminCredentials);
 
-  //   expect(adminResponse.statusCode).toBe(200);
-  //   adminToken = adminResponse.body.token;
+//   //   expect(adminResponse.statusCode).toBe(200);
+//   //   adminToken = adminResponse.body.token;
 
-  //   // Fetch a valid token using public access user credentials
-  //   const userCredentials = {
-  //     email: 'kamogeloMol@gmail.com',
-  //     password: 'Strawberry123'
-  //   };
+//   //   // Fetch a valid token using public access user credentials
+//   //   const userCredentials = {
+//   //     email: 'kamogeloMol@gmail.com',
+//   //     password: 'Strawberry123'
+//   //   };
 
-  //   const userResponse = await request(app)
-  //     .post('/api/v1/auth/login')
-  //     .send(userCredentials);
+//   //   const userResponse = await request(app)
+//   //     .post('/api/v1/auth/login')
+//   //     .send(userCredentials);
 
-  //   expect(userResponse.statusCode).toBe(200);
-  //   userToken = userResponse.body.token;
-  // });
+//   //   expect(userResponse.statusCode).toBe(200);
+//   //   userToken = userResponse.body.token;
+//   // });
 
-    /*it('should rate a document successfully', async () => {
-    const ratingData = {
-      docId:13,  // Replace with an actual docId from your test database
-      userId: 17, // Replace with an actual userId from your test database
-      rating: 4
-    };
+//     /*it('should rate a document successfully', async () => {
+//     const ratingData = {
+//       docId:13,  // Replace with an actual docId from your test database
+//       userId: 17, // Replace with an actual userId from your test database
+//       rating: 4
+//     };
   
-    const response = await request(app)
-      .post('/api/v1/fileRating/rate')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send(ratingData);
+//     const response = await request(app)
+//       .post('/api/v1/fileRating/rate')
+//       .set('Authorization', `Bearer ${userToken}`)
+//       .send(ratingData);
   
-    console.log('Rate document response:', response.body);
-    expect(response.statusCode).toBe(200);
-    expect(response.text).toEqual('Rating added successfully'); // Use toEqual for string comparison
-  });*/
-  /*it('should return 400 if document not found', async () => {
-    const ratingData = {
-      docId: 999,  // Non-existent docId
-      userId: 17,
-      rating: 4
-    };
+//     console.log('Rate document response:', response.body);
+//     expect(response.statusCode).toBe(200);
+//     expect(response.text).toEqual('Rating added successfully'); // Use toEqual for string comparison
+//   });*/
+//   /*it('should return 400 if document not found', async () => {
+//     const ratingData = {
+//       docId: 999,  // Non-existent docId
+//       userId: 17,
+//       rating: 4
+//     };
 
-    const response = await request(app)
-      .post('/api/v1/fileRating/rate')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send(ratingData);
+//     const response = await request(app)
+//       .post('/api/v1/fileRating/rate')
+//       .set('Authorization', `Bearer ${userToken}`)
+//       .send(ratingData);
 
-    expect(response.statusCode).toBe(400);
-    expect(response.text).toBe('Document not found');
-  });*/
+//     expect(response.statusCode).toBe(400);
+//     expect(response.text).toBe('Document not found');
+//   });*/
 
-  /*it('should return 400 if user has already rated the document', async () => {
-    const ratingData = {
-      docId: 5,
-      userId: 17,
-      rating: 4
-    };
-    const ratingData1 = {
-      docId: 5,
-      userId: 17,
-      rating: 3
-    }
+//   /*it('should return 400 if user has already rated the document', async () => {
+//     const ratingData = {
+//       docId: 5,
+//       userId: 17,
+//       rating: 4
+//     };
+//     const ratingData1 = {
+//       docId: 5,
+//       userId: 17,
+//       rating: 3
+//     }
 
-    // First rating attempt
-    await request(app)
-      .post('/api/v1/fileRating/rate')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send(ratingData);
+//     // First rating attempt
+//     await request(app)
+//       .post('/api/v1/fileRating/rate')
+//       .set('Authorization', `Bearer ${userToken}`)
+//       .send(ratingData);
 
-    // Second rating attempt
-    const response = await request(app)
-      .post('/api/v1/fileRating/rate')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send(ratingData1);
+//     // Second rating attempt
+//     const response = await request(app)
+//       .post('/api/v1/fileRating/rate')
+//       .set('Authorization', `Bearer ${userToken}`)
+//       .send(ratingData1);
 
-    expect(response.statusCode).toBe(400);
-    expect(response.text).toBe('You cannot rate the same document more than once');
-  });
-*/
+//     expect(response.statusCode).toBe(400);
+//     expect(response.text).toBe('You cannot rate the same document more than once');
+//   });
+// */
 
-// it('should get all ratings as admin', async () => {
-//   const response = await request(app)
-//     .get('/api/v1/fileRating')
-//     .set('Authorization', `Bearer ${adminToken}`);
+// // it('should get all ratings as admin', async () => {
+// //   const response = await request(app)
+// //     .get('/api/v1/fileRating')
+// //     .set('Authorization', `Bearer ${adminToken}`);
 
-//   console.log('Get all ratings response:', response.body);
-//   console.log('Get all ratings status:', response.statusCode);
-//   expect(response.statusCode).toBe(200);
-//   expect(response.body).toBeInstanceOf(Array);
+// //   console.log('Get all ratings response:', response.body);
+// //   console.log('Get all ratings status:', response.statusCode);
+// //   expect(response.statusCode).toBe(200);
+// //   expect(response.body).toBeInstanceOf(Array);
+// // });
+// /* it('should return 403 for public access user trying to get all ratings', async () => {
+//     const response = await request(app)
+//       .get('/api/v1/fileRating')
+//       .set('Authorization', `Bearer ${userToken}`);
+
+//     expect(response.statusCode).toBe(403);
+//   });*/
+
 // });
-/* it('should return 403 for public access user trying to get all ratings', async () => {
-    const response = await request(app)
-      .get('/api/v1/fileRating')
-      .set('Authorization', `Bearer ${userToken}`);
-
-    expect(response.statusCode).toBe(403);
-  });*/
-
-});
 
 
 
@@ -520,7 +520,7 @@ describe('Document API Tests', () => {
   });
 
   it('should get document by ID successfully', async () => {
-      const docId = 1; // valid document Id
+      const docId = 26; // valid document Id
       const response = await request(app)
           .get(`/api/v1/documents/${docId}`)
           .set('Authorization', `Bearer ${adminToken}`);
