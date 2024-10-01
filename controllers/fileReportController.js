@@ -5,7 +5,6 @@ const sql = require('mssql');
 const jwt = require('jsonwebtoken');
 
 // Function to handle reporting a file with severity levels
-
 const reportFile = async (req, res) => {
     const { docId, userId, reporting_details, severity_level } = req.body;
 
@@ -16,9 +15,9 @@ const reportFile = async (req, res) => {
         try {
             await transaction.begin();
 
-            // Check if the document is in the APPROVED_DOCUMENT table
+            // Check if the document is in the DOCUMENT table with status 'approved'
             const checkDocumentQuery = `
-                SELECT COUNT(*) AS count FROM APPROVED_DOCUMENT WHERE docId = @docId
+                SELECT COUNT(*) AS count FROM DOCUMENT WHERE docId = @docId AND status = 'approved'
             `;
             const checkRequest = new sql.Request(transaction);
             checkRequest.input('docId', sql.Int, docId);
@@ -26,7 +25,7 @@ const reportFile = async (req, res) => {
 
             if (documentResult.recordset[0].count === 0) {
                 await transaction.rollback();
-                return res.status(404).json({ message: 'Document not found in approved documents.' });
+                return res.status(404).json({ message: 'Document not found or not approved.' });
             }
 
             // Check if the user has already reported this document
@@ -58,7 +57,6 @@ const reportFile = async (req, res) => {
                 request.input('severity_level', sql.NVarChar, severity_level);
                 await request.query(insertReportQuery);
 
-
             } else if (severity_level === "moderate") {
                 // Insert the report into the DOCUMENT_REPORTING table
                 const insertReportQuery = `
@@ -83,13 +81,9 @@ const reportFile = async (req, res) => {
 
             } else if (severity_level === "severe") {
                 // Handle document deletion for "egregious" severity
-
-                // Delete from PENDING_DOCUMENT, APPROVED_DOCUMENT, RATING, and DOCUMENT in the correct order
-                
                 const deleteFromDocumentQuery = `
                     UPDATE DOCUMENT SET status = 'banned' WHERE docId = @docId
                 `;
-
                 const deleteRequest = new sql.Request(transaction);
                 deleteRequest.input('docId', sql.Int, docId);
 
@@ -113,5 +107,4 @@ const reportFile = async (req, res) => {
     }
 };
 
-
-module.exports = { reportFile};
+module.exports = { reportFile };
