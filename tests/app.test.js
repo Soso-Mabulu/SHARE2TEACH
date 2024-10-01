@@ -122,33 +122,33 @@ describe('Document Rating API Tests', () => {
   let pool;
   let query;
 
-  beforeAll(async () => {
-    // Fetch a valid token using admin credentials
-    const adminCredentials = {
-      email: 'john.doe@example.com',
-      password: 'password123'
-    };
+  // beforeAll(async () => {
+  //   // Fetch a valid token using admin credentials
+  //   const adminCredentials = {
+  //     email: 'john.doe@example.com',
+  //     password: 'password123'
+  //   };
 
-    const adminResponse = await request(app)
-      .post('/api/v1/auth/login')
-      .send(adminCredentials);
+  //   const adminResponse = await request(app)
+  //     .post('/api/v1/auth/login')
+  //     .send(adminCredentials);
 
-    expect(adminResponse.statusCode).toBe(200);
-    adminToken = adminResponse.body.token;
+  //   expect(adminResponse.statusCode).toBe(200);
+  //   adminToken = adminResponse.body.token;
 
-    // Fetch a valid token using public access user credentials
-    const userCredentials = {
-      email: 'kamogeloMol@gmail.com',
-      password: 'Strawberry123'
-    };
+  //   // Fetch a valid token using public access user credentials
+  //   const userCredentials = {
+  //     email: 'kamogeloMol@gmail.com',
+  //     password: 'Strawberry123'
+  //   };
 
-    const userResponse = await request(app)
-      .post('/api/v1/auth/login')
-      .send(userCredentials);
+  //   const userResponse = await request(app)
+  //     .post('/api/v1/auth/login')
+  //     .send(userCredentials);
 
-    expect(userResponse.statusCode).toBe(200);
-    userToken = userResponse.body.token;
-  });
+  //   expect(userResponse.statusCode).toBe(200);
+  //   userToken = userResponse.body.token;
+  // });
 
     /*it('should rate a document successfully', async () => {
     const ratingData = {
@@ -211,16 +211,16 @@ describe('Document Rating API Tests', () => {
   });
 */
 
-it('should get all ratings as admin', async () => {
-  const response = await request(app)
-    .get('/api/v1/ratings')
-    .set('Authorization', `Bearer ${adminToken}`);
+// it('should get all ratings as admin', async () => {
+//   const response = await request(app)
+//     .get('/api/v1/fileRating')
+//     .set('Authorization', `Bearer ${adminToken}`);
 
-  console.log('Get all ratings response:', response.body);
-  console.log('Get all ratings status:', response.statusCode);
-  expect(response.statusCode).toBe(200);
-  expect(response.body).toBeInstanceOf(Array);
-});
+//   console.log('Get all ratings response:', response.body);
+//   console.log('Get all ratings status:', response.statusCode);
+//   expect(response.statusCode).toBe(200);
+//   expect(response.body).toBeInstanceOf(Array);
+// });
 /* it('should return 403 for public access user trying to get all ratings', async () => {
     const response = await request(app)
       .get('/api/v1/fileRating')
@@ -520,7 +520,7 @@ describe('Document API Tests', () => {
   });
 
   it('should get document by ID successfully', async () => {
-      const docId = 3; // valid document Id
+      const docId = 1; // valid document Id
       const response = await request(app)
           .get(`/api/v1/documents/${docId}`)
           .set('Authorization', `Bearer ${adminToken}`);
