@@ -5,7 +5,7 @@ const sql = require('mssql');
 const authorize = require('../middleware/authorize');
 
 // Get all FAQs
-router.get('/', authorize(['public', 'admin']), async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const pool = await connect();
     const result = await pool.request().query('SELECT * FROM FAQ');
