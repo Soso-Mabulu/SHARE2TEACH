@@ -169,56 +169,30 @@ const getApprovedDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
 
-        const userRole = req.user.role; // Get user role from the request
-
         // Declare query variable
         let query;
 
         // Construct the query based on user role
-        if (userRole === 'public' || userRole === 'educator') {
-            query = `
-                SELECT 
-                    d.module, 
-                    d.description, 
-                    d.location, 
-                    d.university, 
-                    d.category, 
-                    d.academicYear,
-                    d.fileName,
-                    d.fileType,
-                    d.fileSize,
-                    d.pageCount,
-                    d.author,
-                    d.creationDate,
-                    d.modificationDate
-                FROM DOCUMENT d
-                WHERE d.status = 'approved'
-            `;
-        } else {
-            // For moderators and admins, retrieve all fields
-            query = `
-                SELECT 
-                    d.docId, 
-                    d.module, 
-                    d.description, 
-                    d.location, 
-                    d.university, 
-                    d.category, 
-                    d.academicYear, 
-                    d.userId AS documentUserId,
-                    d.fileName,
-                    d.fileType,
-                    d.fileSize,
-                    d.pageCount,
-                    d.author,
-                    d.creationDate,
-                    d.modificationDate
-                FROM DOCUMENT d
-                INNER JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
-                WHERE d.status = 'approved'
-            `;
-        }
-
+       
+        query = `
+            SELECT 
+                d.module, 
+                d.description, 
+                d.location, 
+                d.university, 
+                d.category, 
+                d.academicYear,
+                d.fileName,
+                d.fileType,
+                d.fileSize,
+                d.pageCount,
+                d.author,
+                d.creationDate,
+                d.modificationDate
+            FROM DOCUMENT d
+            WHERE d.status = 'approved'
+        `;
+        
         // Prepare and execute the SQL query
         const request = new sql.Request(connection);
         const result = await request.query(query); // Execute the query
