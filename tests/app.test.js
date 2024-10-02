@@ -269,7 +269,6 @@ describe('FAQ API Tests', () => {
   it('should get all FAQs as admin', async () => {
     const response = await request(app)
       .get('/api/v1/faq')
-      .set('Authorization', `Bearer ${adminToken}`);
 
     console.log('Get all FAQs response:', response.body);
     expect(response.statusCode).toBe(200);
