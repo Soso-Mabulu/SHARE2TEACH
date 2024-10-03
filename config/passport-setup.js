@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: 'http://localhost:3000/api/v1/auth/google/callback',
+    callbackURL: 'https://share2teach-backend-dev-cs4b5lzjkq-uc.a.run.app/api/v1/auth/google/callback',
 }, async (accessToken, refreshToken, profile, done) => {
     const email = profile.emails[0].value;
     const userName = profile.name.givenName || 'Unknown';
