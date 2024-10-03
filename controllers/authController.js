@@ -135,8 +135,32 @@ const requestPasswordReset = async (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Password Reset Request',
-      text: `You requested a password reset. Click the link to reset your password: https://your-frontend-domain.com/reset-password?token=${resetToken}`
+      html: `
+        <div style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9f9; color: #333;">
+          <div style="max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+            <h1 style="text-align: center; color: #5b4b9a;">Share2Teach Password Reset</h1>
+            <p>Dear User,</p>
+            <p>You have requested to reset your password for your Share2Teach account. To proceed, please click the button below:</p>
+            
+            <a href="https://your-frontend-domain.com/reset-password?token=${resetToken}" 
+               style="display: inline-block; padding: 10px 20px; margin: 20px 0; background-color: #5b4b9a; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold;">
+               Reset Password
+            </a>
+            
+            <p>If you did not request a password reset, please ignore this email. Your password will remain unchanged.</p>
+            <p>For any questions or concerns, feel free to contact our support team at <a href="mailto:support@share2teach.com" style="color: #5b4b9a;">support@share2teach.com</a>.</p>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ccc;" />
+            <p style="font-size: 12px; text-align: center; color: #777;">
+              &copy; ${new Date().getFullYear()} Share2Teach. All rights reserved.<br />
+              Share2Teach, Inc. | 123 Education Lane | Learning City, ST 12345<br />
+              <a href="https://www.share2teach.com/privacy-policy" style="color: #5b4b9a;">Privacy Policy</a> | <a href="https://www.share2teach.com/terms-of-service" style="color: #5b4b9a;">Terms of Service</a>
+            </p>
+          </div>
+        </div>
+      `
     };
+    
 
     await transporter.sendMail(mailOptions);
     res.json({ message: 'Password reset link sent to your email' });
