@@ -142,7 +142,7 @@ const requestPasswordReset = async (req, res) => {
             <p>Dear User,</p>
             <p>You have requested to reset your password for your Share2Teach account. To proceed, please click the button below:</p>
             
-            <a href="https://your-frontend-domain.com/reset-password?token=${resetToken}" 
+            <a href="http://localhost:5173/reset-password?token=${resetToken}" 
                style="display: inline-block; padding: 10px 20px; margin: 20px 0; background-color: #5b4b9a; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold;">
                Reset Password
             </a>
