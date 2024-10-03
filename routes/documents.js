@@ -17,7 +17,7 @@ router.get('/reported', authorize(['moderator', 'admin']), documentController.ge
 router.get('/denied', authorize(['moderator', 'admin']), documentController.getDeniedDocuments);
 
 // Route to get approved documents
-router.get('/approved', authorize(['educator', 'moderator', 'admin', 'public']), documentController.getApprovedDocuments);
+router.get('/approved', documentController.getApprovedDocuments);
 
 // Route to search for documents
 router.get('/search',authorize(['educator', 'moderator', 'admin', 'public']), documentController.searchDocuments);

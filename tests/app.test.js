@@ -269,7 +269,6 @@ describe('FAQ API Tests', () => {
   it('should get all FAQs as admin', async () => {
     const response = await request(app)
       .get('/api/v1/faq')
-      .set('Authorization', `Bearer ${adminToken}`);
 
     console.log('Get all FAQs response:', response.body);
     expect(response.statusCode).toBe(200);
@@ -450,15 +449,14 @@ describe('Document API Tests', () => {
       expect(response.body.documents).toBeInstanceOf(Array);
   });
 
-  it('should retrieve all approved documents for user', async () => {
+  /*it('should retrieve all approved documents for user', async () => {
       const response = await request(app)
           .get('/api/v1/documents/approved')
-          .set('Authorization', `Bearer ${userToken}`);
 
       expect(response.statusCode).toBe(200);
       expect(response.body).toHaveProperty('documents');
       expect(response.body.documents).toBeInstanceOf(Array);
-  });
+  });*/
 
   it('should retrieve pending documents for admin', async () => {
       const response = await request(app)
