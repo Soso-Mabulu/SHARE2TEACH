@@ -221,7 +221,7 @@ paths:
         "403":
           description: Forbidden, token has been invalidated
 
-    /api/v1/users:
+  /api/v1/users:
     get:
       summary: Retrieve a list of all users
       tags:
