@@ -1,6 +1,5 @@
-require('dotenv').config(); // Load environment variables from .env
-const axios = require('axios'); // For making HTTP requests
 const { PDFDocument } = require('pdf-lib');
+const axios = require('axios'); // For making HTTP requests
 const mammoth = require('mammoth'); // For Word files
 const xlsx = require('xlsx'); // For Excel files
 const puppeteer = require('puppeteer'); // For rendering Excel and PowerPoint files to PDF
@@ -9,10 +8,6 @@ const unzipper = require('unzipper');
 const xml2js = require('xml2js');
 const fs = require('fs'); // For file operations
 const libre = require('libreoffice-convert'); // Import libreoffice-convert
-
-const CLOUDCONVERT_API_KEY = process.env.CLOUDCONVERT; // API key from .env
-const CLOUDCONVERT_API_URL = 'https://api.cloudconvert.com/v2/convert'; // CloudConvert API URL
-const CLOUDCONVERT_UPLOAD_URL = 'https://api.cloudconvert.com/v2/import/upload'; // CloudConvert file upload URL
 
 const todayDate = new Date().toISOString(); // Today's date in ISO 8601 format
 
@@ -53,8 +48,8 @@ async function convertToPDF(file) {
     return { pdfBuffer, metadata };
 }
 
-// Function to convert a file using either LibreOffice or CloudConvert
-async function convertFileToPDF(buffer, inputFormat) {
+// Function to convert a file using LibreOffice
+async function convertFileToPDF(buffer) {
     try {
         // Attempt conversion using LibreOffice
         const outputFileBuffer = await new Promise((resolve, reject) => {
@@ -71,50 +66,10 @@ async function convertFileToPDF(buffer, inputFormat) {
 
     } catch (error) {
         console.error('Failed to convert file to PDF using LibreOffice:', error);
-
-        // Fallback to CloudConvert if LibreOffice conversion fails
-        try {
-            // Step 1: Upload the file
-            const uploadResponse = await axios.post(CLOUDCONVERT_UPLOAD_URL, {
-                file: buffer,
-            }, {
-                headers: {
-                    Authorization: `Bearer ${CLOUDCONVERT_API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            const uploadFileId = uploadResponse.data.data.id; // Get the uploaded file ID
-
-            // Step 2: Convert the file
-            const convertResponse = await axios.post(CLOUDCONVERT_API_URL, {
-                tasks: {
-                    'upload-file': { operation: 'import/upload', filename: uploadFileId },
-                    'convert-file': { 
-                        operation: 'convert', 
-                        input: 'upload-file', 
-                        output_format: 'pdf', 
-                        engine: 'office' 
-                    },
-                    'export-file': { operation: 'export/url', input: 'convert-file' },
-                },
-            }, {
-                headers: {
-                    Authorization: `Bearer ${CLOUDCONVERT_API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            // Handle success response
-            console.log('File converted successfully using CloudConvert:', convertResponse.data);
-            return convertResponse.data; // Return the conversion result for further processing
-
-        } catch (cloudError) {
-            console.error('Failed to convert file to PDF using CloudConvert:', cloudError);
-            throw new Error('Failed to convert file to PDF');
-        }
+        throw new Error('Failed to convert file to PDF');
     }
 }
+
 // Extract PDF metadata
 async function extractPDFMetadata(buffer) {
     try {
