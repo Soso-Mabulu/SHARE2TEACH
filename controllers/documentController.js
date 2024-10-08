@@ -17,7 +17,8 @@ const getAllDocuments = async (req, res) => {
             SELECT 
                 d.docId, 
                 d.module, 
-                d.description, 
+                d.description,
+                d.fileName, 
                 d.location, 
                 d.university, 
                 d.category, 
@@ -67,7 +68,7 @@ const getPendingDocuments = async (req, res) => {
         const userId = req.user.id; // Update based on how you store user ID
 
         const query = `
-            SELECT docId, module, description, location, university, category, academicYear, userId
+            SELECT docId, module, description,fileName , author, fileSize, location, university, category, academicYear, userId
             FROM DOCUMENT
             WHERE status = 'pending'
         `;
@@ -98,7 +99,8 @@ const getReportedDocuments = async (req, res) => {
                 d.docId, 
                 d.module, 
                 d.description, 
-                d.location, 
+                d.location,
+                d.fileName, 
                 d.university, 
                 d.category, 
                 d.academicYear, 
@@ -136,7 +138,8 @@ const getDeniedDocuments = async (req, res) => {
             SELECT 
                 d.docId, 
                 d.module, 
-                d.description, 
+                d.description,
+                d.fileName, 
                 d.location, 
                 d.university, 
                 d.category, 
