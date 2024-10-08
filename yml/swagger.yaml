@@ -221,7 +221,7 @@ paths:
         "403":
           description: Forbidden, token has been invalidated
 
-  /api/v1/users:
+    /api/v1/users:
     get:
       summary: Retrieve a list of all users
       tags:
@@ -303,6 +303,55 @@ paths:
           description: Internal server error
 
   /api/v1/users/{userId}:
+    get:
+      summary: Retrieve user details by userId
+      tags:
+        - Users
+      description: Fetches user details for the specified userId. Requires authentication.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            example: "12345"
+          description: The ID of the user whose details are being requested.
+      responses:
+        "200":
+          description: User details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: User ID
+                  userName:
+                    type: string
+                    description: User's first name
+                  userLName:
+                    type: string
+                    description: User's last name
+                  email:
+                    type: string
+                    description: User email
+                  userType:
+                    type: string
+                    description: User role
+                example:
+                  id: 12345
+                  userName: "Jane"
+                  userLName: "Smith"
+                  email: "jane.smith@example.com"
+                  userType: "public"
+        "404":
+          description: User not found
+        "500":
+          description: Internal server error
+
     put:
       summary: Update user type
       tags:
@@ -360,6 +409,7 @@ paths:
           description: User not found
         "500":
           description: Internal server error
+
           
   /api/v1/upload:
     post:
@@ -641,7 +691,7 @@ paths:
   /api/v1/report:
     post:
       summary: Report a file
-      description: Endpoint to report a file by providing the document ID, report details, and severity level.
+      description: Endpoint to report a file by providing the document ID, user ID, and report details. The system will determine the severity of the report based on how many times the document has been reported.
       tags:
         - File Reporting
       security:
@@ -657,18 +707,17 @@ paths:
                   type: integer
                   example: 123
                   description: The document ID being reported.
+                userId:
+                  type: integer
+                  example: 456
+                  description: The user ID of the person reporting the document.
                 reporting_details:
                   type: string
                   example: Inappropriate content
                   description: Details of the report.
-                severity_level:
-                  type: string
-                  enum: [minor, moderate, severe]
-                  example: minor
-                  description: The severity level of the infraction ('minor', 'moderate', 'severe').
       responses:
         '200':
-          description: File reported successfully.
+          description: File reported successfully. The document's status may be updated if it reaches the severity threshold.
           content:
             application/json:
               schema:
@@ -685,6 +734,8 @@ paths:
           description: Unauthorized. No or invalid token provided.
         '500':
           description: Server error. Failed to report file due to an internal error.
+
+
   
   /api/v1/ratings:
     post:
@@ -896,7 +947,9 @@ paths:
   /api/v1/moderation:
     post:
       summary: Moderate a document
-      description: Allows a moderator to approve or deny a document. If approved, the document is moved to the `APPROVED_DOCUMENT` table; if denied, it is moved to the `DENIED_DOCUMENT` table. Once a document is denied, it cannot be approved again. Similarly, once a document is approved, it cannot be disapproved. Requires moderator role.
+      description: |
+        Allows a moderator to approve or deny a document. If approved, the document is moved to the `APPROVED_DOCUMENT` table; if denied, it is moved to the `DENIED_DOCUMENT` table. 
+        Once a document is denied, it cannot be approved again. Similarly, once a document is approved, it cannot be disapproved. Requires moderator role.
       tags:
         - Moderation
       security:
@@ -915,11 +968,14 @@ paths:
                 action:
                   type: string
                   enum: [approve, disapprove]
-                  description: The action to be taken on the document. `approve` moves the document to `APPROVED_DOCUMENT`, while `disapprove` moves it to `DENIED_DOCUMENT`.
+                  description: |
+                    The action to be taken on the document. `approve` moves the document to `APPROVED_DOCUMENT`, 
+                    while `disapprove` moves it to `DENIED_DOCUMENT`.
                   example: "disapprove"
                 comments:
                   type: string
-                  description: An optional comment regarding the moderation decision. **Required if the action is `disapprove`.**
+                  description: |
+                    An optional comment regarding the moderation decision. **Required if the action is `disapprove`.**
                   example: "Document does not meet the required standards."
               required:
                 - docid

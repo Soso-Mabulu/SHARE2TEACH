@@ -4,11 +4,11 @@ const moment = require('moment-timezone'); // Ensure moment-timezone is installe
 
 // File moderation: approve/disapprove with comments
 const moderateFile = async (req, res) => {
-  const { docid, action, comments } = req.body;
+  const { docid, action, comments } = req.body; // Remove user_id
 
   // Validate inputs
   if (!docid || !action || !['approve', 'disapprove'].includes(action)) {
-    return res.status(400).json({ message: 'Invalid input: docid and action are required, action must be either approve or disapprove.' });
+    return res.status(400).json({ message: 'Invalid input: docid and action are required. Action must be either approve or disapprove.' });
   }
 
   // Require comments if the action is 'disapprove'
@@ -38,33 +38,8 @@ const moderateFile = async (req, res) => {
 
     const currentStatus = documentCheckResult.recordset[0].status;
 
-    // Check if the document exists in the DOCUMENT_REPORTING table with a severity level of 'minor'
-    const reportedDocumentCheckQuery = `
-      SELECT severity_level 
-      FROM DOCUMENT_REPORTING
-      WHERE docId = @docid
-      AND severity_level = 'minor';
-    `;
-
-    const reportedDocumentCheckResult = await pool.request()
-      .input('docid', sql.Int, docid)
-      .query(reportedDocumentCheckQuery);
-
-    const isMinorSeverityReported = reportedDocumentCheckResult.recordset.length > 0;
-
-    // If the document is approved but reported with minor severity, allow moderation
-    if (currentStatus === 'approved' && isMinorSeverityReported) {
-      if (action === 'approve') {
-        return res.status(200).json({ message: 'Document is already approved and reported with minor severity. No changes made.' });
-      } else if (action === 'disapprove') {
-        // Proceed with disapproval if reported with minor severity
-        await disapproveDocument(pool, docid, now, comments);
-        return res.status(200).json({ message: 'Document disapproved successfully and removed from reported table.' });
-      }
-    }
-
-    // Handle approved but not reported case
-    if (currentStatus === 'approved' && !isMinorSeverityReported) {
+    // Handle approved documents
+    if (currentStatus === 'approved') {
       return res.status(400).json({ message: 'This document has already been approved and cannot be moderated again.' });
     }
 
@@ -80,7 +55,7 @@ const moderateFile = async (req, res) => {
 
     // If action is approval, and document is neither denied nor already approved
     if (action === 'approve') {
-      await approveDocument(pool, docid, now);
+      await approveDocument(pool, docid, now); // Remove user_id
       return res.status(200).json({ message: 'Document approved successfully.' });
     } 
 
@@ -91,22 +66,13 @@ const moderateFile = async (req, res) => {
     }
 
   } catch (err) {
-    // Enhanced error handling for primary key violation
-    if (err.message.includes('Violation of PRIMARY KEY constraint') && err.message.includes('DENIED_DOCUMENT')) {
-      return res.status(400).json({ message: 'Document is already denied.' });
-    }
-
-    if (err.message.includes('Violation of PRIMARY KEY constraint') && err.message.includes('APPROVED_DOCUMENT')) {
-      return res.status(400).json({ message: 'Document is already approved.' });
-    }
-
     console.error('Moderation Error:', err.message);
     res.status(500).json({ message: 'Failed to moderate document', error: err.message });
   }
 };
 
 // Function to approve a document
-const approveDocument = async (pool, docid, now) => {
+const approveDocument = async (pool, docid, now) => { // Remove user_id
   const query = `
     BEGIN TRANSACTION;
     
@@ -118,7 +84,7 @@ const approveDocument = async (pool, docid, now) => {
       WHERE docid = @docid;
 
       -- Insert into APPROVED_DOCUMENT
-      INSERT INTO APPROVED_DOCUMENT (docid, datetime_of_approval)
+      INSERT INTO APPROVED_DOCUMENT (docid, datetime_of_approval) 
       VALUES (@docid, @now);
 
       -- Delete from PENDING_DOCUMENT
@@ -151,10 +117,6 @@ const disapproveDocument = async (pool, docid, now, comments) => {
 
     -- Delete from PENDING_DOCUMENT
     DELETE FROM PENDING_DOCUMENT
-    WHERE docid = @docid;
-
-    -- Delete from DOCUMENT_REPORTING
-    DELETE FROM DOCUMENT_REPORTING
     WHERE docid = @docid;
 
     COMMIT TRANSACTION;

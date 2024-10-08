@@ -144,4 +144,32 @@ router.delete('/:userId', authorize('admin'), async (req, res) => {
     }
 });
 
+// GET /users/:userId - Retrieve user details by userId
+router.get('/:userId', authorize(['public', 'moderator', 'educator', 'admin']), async (req, res) => {
+    const { userId } = req.params;  // Extract userId from the route parameter
+
+    let db;
+    try {
+        db = await connectToDatabase(); // Establish the database connection
+        const request = db.request();
+
+        // Use parameterized queries to prevent SQL injection
+        request.input('userId', userId);
+
+        // Fetch the user's details from the database
+        const result = await request.query('SELECT userId, userName, userLName, email, userType FROM [User] WHERE userId = @userId');
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Return the user details as a response
+        res.status(200).json(result.recordset[0]);
+    } catch (err) {
+        console.error('Error retrieving user details:', err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+
 module.exports = router;
