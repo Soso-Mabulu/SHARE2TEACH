@@ -432,10 +432,6 @@ paths:
                     type: string
                     format: binary
                   description: The files to upload. Supported formats: PDF, DOCX, XLSX, PPTX.
-                title:
-                  type: string
-                  description: The title of the document.
-                  example: "Introduction to Cloud Computing"
                 module:
                   type: string
                   description: The module associated with the document.
