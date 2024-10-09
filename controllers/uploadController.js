@@ -47,44 +47,83 @@ const extractFirstPageImage = async (pdfBuffer, outputPath) => {
     });
 };
 
-const generateLightPreviewImage = async (pdfBuffer, outputPath) => {
-    const tempPdfPath = path.join(__dirname, 'temp_light.pdf');
-    fs.writeFileSync(tempPdfPath, pdfBuffer);
+// Function to generate a lighter preview PDF
+const generateLightPreview = async (pdfBuffer) => {
+    const doc = await PDFDocument.load(pdfBuffer);
+    const lightDoc = await PDFDocument.create();
 
-    // Step 1: Read the licensing PDF
-    const licensePdfBuffer = await readLicensingPDF();
-    const licensePdfPath = path.join(outputPath, 'license.pdf');
-    fs.writeFileSync(licensePdfPath, licensePdfBuffer); // Save the licensing PDF to the output path
+    const pageCount = doc.getPageCount();
+    const pagesToExtract = Math.min(3, pageCount); // Extract max 3 pages
 
-    // Step 2: Merge the license PDF with the temp PDF
-    const mergedPdfPath = path.join(outputPath, 'merged_preview.pdf');
+    // Add the first few pages (up to 3) to the lighter document
+    for (let i = 0; i < pagesToExtract; i++) {
+        const [page] = await lightDoc.copyPages(doc, [i]);
+        lightDoc.addPage(page);
+    }
 
-    // Return a promise to handle the exec calls
-    return new Promise((resolve, reject) => {
-        exec(`pdfunite "${licensePdfPath}" "${tempPdfPath}" "${mergedPdfPath}"`, (error) => {
-            if (error) {
-                console.error(`Error merging PDFs: ${error}`);
-                return reject(error);
-            }
-
-            // Step 3: Extract up to the first 3 pages of the merged PDF to PNG
-            exec(`pdftoppm -f 1 -l 3 -png "${mergedPdfPath}" "${outputPath}/light_preview"`, (error) => {
-                if (error) {
-                    console.error(`Error extracting images: ${error}`);
-                    return reject(error);
-                }
-                
-                const images = [];
-                for (let i = 1; i <= 3; i++) {
-                    const imagePath = path.join(outputPath, `light_preview-${i}.png`);
-                    images.push(imagePath);
-                }
-                console.log('Generated light preview images:', images);
-                resolve(images); // Resolve the promise with the array of image paths
-            });
-        });
+    // Read the licensing PDF and add it as the last page
+    const licensingBuffer = await readLicensingPDF();
+    const licensingDoc = await PDFDocument.load(licensingBuffer);
+    const [licensingPage] = await lightDoc.copyPages(licensingDoc, [0]);
+    lightDoc.addPage(licensingPage);
+    
+    // Add an extra page indicating there are more pages available for download
+    const morePagesPage = lightDoc.addPage([600, 400]); // Adjust dimensions as needed
+    const { width, height } = morePagesPage.getSize();
+    
+    // Draw a card-like rectangle
+    morePagesPage.drawRectangle({
+        x: 50,
+        y: height - 300,
+        width: 500,
+        height: 250,
+        color: rgb(0.95, 0.95, 0.95), // Light gray color for the card
+        borderColor: rgb(0, 0, 0), // Border color
+        borderWidth: 2,
     });
+
+    // Embed the font
+    const font = await lightDoc.embedFont(StandardFonts.Helvetica);
+
+    // Draw the title centered in the card
+    const title = 'Share2Teach';
+    const titleSize = 30;
+    const titleWidth = font.widthOfTextAtSize(title, titleSize);
+    morePagesPage.drawText(title, {
+        x: (width - titleWidth) / 2, // Center the title dynamically
+        y: height - 220, // Adjust for card position
+        size: titleSize,
+        color: rgb(0, 0, 0),
+        font, // Use the embedded font
+    });
+
+    // Draw the main text centered in the card
+    const mainText1 = 'This document has more pages available for download.';
+    const mainText2 = 'Please download the full document to view more.';
+    const mainTextSize = 16;
+    const mainTextWidth1 = font.widthOfTextAtSize(mainText1, mainTextSize);
+    const mainTextWidth2 = font.widthOfTextAtSize(mainText2, mainTextSize);
+
+    morePagesPage.drawText(mainText1, {
+        x: (width - mainTextWidth1) / 2, // Center the text dynamically
+        y: height - 260, // Adjust position
+        size: mainTextSize,
+        color: rgb(0, 0, 0),
+        font, // Use the embedded font
+    });
+
+    morePagesPage.drawText(mainText2, {
+        x: (width - mainTextWidth2) / 2, // Center the text dynamically
+        y: height - 290, // Adjust position
+        size: mainTextSize,
+        color: rgb(0, 0, 0),
+        font, // Use the embedded font
+    });
+
+    return await lightDoc.save();
 };
+
+
 
 const uploadFiles = async (req, res) => {
     let connection;
@@ -101,9 +140,9 @@ const uploadFiles = async (req, res) => {
             return res.status(400).json({ message: "File size exceeds the 10MB limit" });
         }
 
-        const { title, module, description, university, category, academicYear } = req.body;
+        const {title, module, description, university, category, academicYear } = req.body;
 
-        if (!title || !module || !description || !university || !category || !academicYear) {
+        if (!title ||!module || !description || !university || !category || !academicYear) {
             return res.status(400).json({ message: "Missing required fields in the request body" });
         }
 
@@ -146,7 +185,7 @@ const uploadFiles = async (req, res) => {
 
         // Generate the first page preview image
         const outputPath = path.join(__dirname, 'temp_images');
-        if (!fs.existsSync(outputPath)) {
+        if (!fs.existsSync(outputPath)){
             fs.mkdirSync(outputPath);
         }
         const previewImagePath = await extractFirstPageImage(mergedPdfBuffer, outputPath);
@@ -161,20 +200,18 @@ const uploadFiles = async (req, res) => {
         // Upload the preview image to Azure Blob Storage
         const previewImageUrl = await s3Upload({ originalname: path.basename(previewImagePath), buffer: optimizedImageBuffer });
 
-        // Generate lighter preview images
-        const lightPreviewImagePaths = await generateLightPreviewImage(pdfBuffer, outputPath);
-        
-        // Upload each lighter preview image to Azure Blob Storage
-        const lightPreviewImageUrls = await Promise.all(lightPreviewImagePaths.map(async (lightPreviewImagePath) => {
-            const lightPreviewImageBuffer = fs.readFileSync(lightPreviewImagePath);
-            const optimizedLightPreviewImageBuffer = await sharp(lightPreviewImageBuffer)
-                .resize(300) // Resize to width of 300px
-                .png({ quality: 80 })
-                .toBuffer();
-            return await s3Upload({ originalname: path.basename(lightPreviewImagePath), buffer: optimizedLightPreviewImageBuffer });
-        }));
+        // Generate a lighter preview PDF
+        const lightPreviewBuffer = await generateLightPreview(mergedPdfBuffer);
+
+        // Upload the lighter preview PDF to Azure Blob Storage
+        const lightPreviewUpload = await s3Upload({ originalname: `light_${file.originalname.replace(/\.[^/.]+$/, "")}.pdf`, buffer: lightPreviewBuffer });
+        const lightPreviewUrl = lightPreviewUpload;
+
+        // Calculate the size of the lighter preview file
+        const previewFileSize = lightPreviewBuffer.length;
 
         // Clean up temporary files
+        fs.unlinkSync(path.join(__dirname, 'temp.pdf'));
         fs.unlinkSync(previewImagePath);
         fs.rmdirSync(outputPath, { recursive: true });
 
@@ -204,8 +241,8 @@ const uploadFiles = async (req, res) => {
             .input('creationDate', sql.DateTime, metadata.creationDate || null)
             .input('modificationDate', sql.DateTime, metadata.modificationDate || null)
             .input('preview_image_url', sql.VarChar, previewImageUrl)
-            .input('light_preview_url', sql.VarChar, lightPreviewImageUrls.join(','))
-            .input('preview_file_size', sql.BigInt, lightPreviewImageUrls.length * optimizedImageBuffer.length); // Adjust as needed
+            .input('light_preview_url', sql.VarChar, lightPreviewUrl)
+            .input('preview_file_size', sql.BigInt, previewFileSize);
 
         const documentResult = await request.query(
             `INSERT INTO DOCUMENT 
@@ -234,7 +271,7 @@ const uploadFiles = async (req, res) => {
             message: "Document uploaded and marked as pending", 
             documentId: docId,
             previewImageUrl: previewImageUrl,
-            lightPreviewUrls: lightPreviewImageUrls // Change to plural to indicate multiple URLs
+            lightPreviewUrl: lightPreviewUrl
         });
     } catch (err) {
         console.error('Unexpected error:', err);
