@@ -198,7 +198,10 @@ const uploadFiles = async (req, res) => {
             .toBuffer();
 
         // Upload the preview image to Azure Blob Storage
-        const previewImageUrl = await s3Upload({ originalname: path.basename(previewImagePath), buffer: optimizedImageBuffer });
+        const timestamp = Date.now();
+        const uniqueFileName = `${timestamp}_${path.basename(previewImagePath)}`;
+        const previewImageUrl = await s3Upload({ originalname: uniqueFileName, buffer: optimizedImageBuffer });
+        
 
         // Generate a lighter preview PDF
         const lightPreviewBuffer = await generateLightPreview(mergedPdfBuffer);
