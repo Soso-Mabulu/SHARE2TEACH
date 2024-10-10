@@ -11,7 +11,7 @@ const {
 } = require('../controllers/faqController.js');
 
 // Get all FAQs
-router.get('/', authorize('admin'), getAllFAQs); 
+router.get('/', getAllFAQs); 
 
 // Search FAQs 
 router.get('/search', searchFAQs);
