@@ -793,6 +793,10 @@ paths:
                   type: integer
                   example: 123
                   description: "The document ID being rated."
+                userId:
+                  type: integer
+                  example: 36
+                  description: "The ID of the user that wants to rate the document."
                 rating:
                   type: integer
                   example: 4
@@ -822,6 +826,17 @@ paths:
                   message:
                     type: string
                     example: "Invalid input. Rating must be between 0 and 5."
+        "403":
+          description: |
+            Forbidden. Only educators, moderators, and public users can rate documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "You do not have permission to rate this document."
         "500":
           description: Server error.
           content:
@@ -832,7 +847,6 @@ paths:
                   error:
                     type: string
                     example: "Database error: Unable to add rating."
-
 
     get:
       summary: Get all ratings
@@ -885,14 +899,27 @@ paths:
               type: object
               required:
                 - docId
+                - userId
               properties:
                 docId:
                   type: integer
                   example: 101
                   description: "The ID of the document for which the rating is being deleted."
+                userId:
+                  type: integer
+                  example: 37
+                  description: "The user that wants to delete the rating."
       responses:
         "204":
-          description: "Rating deleted successfully. No content is returned."
+          description: "Rating deleted successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Rating deleted successfully."
         "404":
           description: "Rating not found."
           content:
@@ -929,12 +956,17 @@ paths:
               type: object
               required:
                 - docId
+                - userId
                 - rating
               properties:
                 docId:
                   type: integer
                   example: 101
                   description: "The ID of the document for which the rating is being updated."
+                userId:
+                  type: integer
+                  example: 37
+                  description: "The ID of the user that wants to update the rating."
                 rating:
                   type: integer
                   example: 4

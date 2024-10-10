@@ -1,4 +1,3 @@
-// routes/ratingRoutes.js
 const express = require('express');
 const authorize = require('../middleware/authorize');
 const {
@@ -11,15 +10,15 @@ const {
 const router = express.Router();
 
 // Route to rate a document, authorized for users
-router.post('/', authorize('public'), rateDocument);
+router.post('/', rateDocument);
 
 // Route to get all ratings, authorized for admins
 router.get('/', authorize('admin'), getAllRatings);
 
 // Route to update a rating, authorized for users
-router.put('/', authorize('public'), updateRating);
+router.put('/', updateRating);
 
 // Route to delete a rating, authorized for users
-router.delete('/', authorize('public'), deleteRating);
+router.delete('/', deleteRating);
 
 module.exports = router;
