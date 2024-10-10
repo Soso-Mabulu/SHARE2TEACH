@@ -52,6 +52,7 @@
     "sharp": "^0.33.5",
     "swagger-ui-express": "^5.0.1",
     "unzipper": "^0.12.3",
+    "uuid": "^10.0.0",
     "xlsx": "^0.18.5",
     "xml2js": "^0.6.2",
     "yamljs": "^0.3.0"

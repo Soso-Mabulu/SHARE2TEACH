@@ -404,6 +404,62 @@ const searchDocuments = async (req, res) => {
     }
 };
 
+const deleteDocument = async (req, res) => {
+    const { docId } = req.params;  
+    try {
+        const connection = await connectToDatabase();
+
+        // Start a transaction
+        const transaction = new sql.Transaction(connection);
+        await transaction.begin();
+
+        try {
+            const request = new sql.Request(transaction);
+            request.input('docId', sql.Int, docId);  
+
+            // Log the document ID being checked
+            console.log(`Attempting to delete document with ID: ${docId}`);
+
+            // Check if the document exists in the DOCUMENT table
+            const checkQuery = await request.query('SELECT * FROM DOCUMENT WHERE docId = @docId');
+            if (checkQuery.recordset.length === 0) {
+                // If document not found, rollback and return 404
+                await transaction.rollback();
+                console.error(`Document with ID ${docId} not found.`);
+                return res.status(404).json({ message: 'Document not found or already deleted.' });
+            }
+
+            // Proceed with deletion from related tables
+            await request.query('DELETE FROM DOCUMENT_REPORTING WHERE docId = @docId');
+            await request.query('DELETE FROM DENIED_DOCUMENT WHERE docId = @docId');
+            await request.query('DELETE FROM APPROVED_DOCUMENT WHERE docId = @docId');
+            await request.query('DELETE FROM PENDING_DOCUMENT WHERE docId = @docId');
+
+            // Finally, delete the document itself
+            const deleteResult = await request.query('DELETE FROM DOCUMENT WHERE docId = @docId');
+
+            // Check if the document was deleted
+            if (deleteResult.rowsAffected[0] === 0) {
+                // If document deletion failed, rollback and return 404
+                await transaction.rollback();
+                console.error(`Failed to delete document with ID ${docId}.`);
+                return res.status(404).json({ message: 'Document not found or already deleted.' });
+            }
+
+            // Commit the transaction if everything is successful
+            await transaction.commit();
+            res.status(200).json({ status: 'success', message: 'Document deleted successfully.' });
+        } catch (error) {
+            // Rollback transaction on any error during deletion
+            await transaction.rollback();
+            console.error('Error deleting document:', error);
+            res.status(500).json({ message: 'Failed to delete document', error: error.message });
+        }
+    } catch (err) {
+        console.error('Database connection error:', err);
+        res.status(500).json({ message: 'Failed to connect to the database', error: err.message });
+    }
+};
 
 module.exports = {
     getAllDocuments,
@@ -412,5 +468,6 @@ module.exports = {
     getDeniedDocuments,
     getApprovedDocuments,
     getDocumentById,
-    searchDocuments
+    searchDocuments,
+    deleteDocument
 };

@@ -509,6 +509,7 @@ paths:
           description: No documents found.
         '500':
           description: Failed to retrieve documents.
+ 
 
   /api/v1/documents/pending:
     get:
@@ -621,37 +622,69 @@ paths:
           description: Failed to retrieve denied documents.
 
   /api/v1/documents/{docId}:
-    get:
-      summary: Get document by ID
-      description: Retrieve a document by its ID.
-      tags:
-        - Documents
-      parameters:
-        - in: path
-          name: docId
-          required: true
-          schema:
-            type: string
-            example: "12345"
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Document successfully moderated.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: success
-                  document:
-                    $ref: '#/components/schemas/Document'
-        '404':
-          description: Document not found.
-        '500':
-          description: Failed to retrieve document.
+      get:
+        summary: Get document by ID
+        description: Retrieve a document by its ID.
+        tags:
+          - Documents
+        parameters:
+          - in: path
+            name: docId
+            required: true
+            schema:
+              type: string
+              example: "12345"
+        security:
+          - bearerAuth: []
+        responses:
+          "200":
+            description: Document successfully retrieved.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: success
+                    document:
+                      $ref: '#/components/schemas/Document'
+          '404':
+            description: Document not found.
+          '500':
+            description: Failed to retrieve document.
+      delete:
+        summary: Delete a document by ID
+        description: Delete a specific document based on its ID. This action will remove the document from all related tables.
+        tags:
+          - Documents
+        parameters:
+          - in: path
+            name: docId
+            required: true
+            schema:
+              type: string
+              example: "12345"
+        security:
+          - bearerAuth: []
+        responses:
+          '200':
+            description: Document deleted successfully.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                      example: success
+                    message:
+                      type: string
+                      example: Document deleted successfully.
+          '404':
+            description: Document not found or already deleted.
+          '500':
+            description: Failed to delete document.
 
   /api/v1/documents/search:
     get:
