@@ -7,12 +7,9 @@ const connectToDatabase = require('../config/db');
 const getAllDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
-    
-        // Get user role and userId from request (assuming they're stored in req.user)
-        const userRole = req.user.role; // Update based on how you store user role
-        const userId = req.user.id; // Update based on how you store user ID
-    
-        // Base query to select documents
+        const userRole = req.user.role; 
+        const userId = req.user.id; 
+
         let query = `
             SELECT 
                 d.docId, 
@@ -29,29 +26,32 @@ const getAllDocuments = async (req, res) => {
                 r.reporting_details,
                 r.reporting_timestamp,
                 nd.datetime_of_denial,
-                a.datetime_of_approval
+                a.datetime_of_approval,
+                d.title, -- Added title
+                d.preview_image_url, -- Added preview image URL
+                d.light_preview_url, -- Added light preview URL
+                d.preview_file_size -- Added preview file size
             FROM DOCUMENT d
             LEFT JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
             LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
             LEFT JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
         `;
-    
-        // Modify the query based on user role
+
         if (userRole === 'public' || userRole === 'educator') {
             query += ` WHERE d.status = 'approved' AND NOT EXISTS ( 
                 SELECT 1 FROM DOCUMENT_REPORTING rr 
                 WHERE rr.docId = d.docId AND rr.userId = @userId 
             ) `;
         }
-    
+
         const request = new sql.Request(connection);
-        request.input('userId', sql.Int, userId); // Add userId as a parameter
+        request.input('userId', sql.Int, userId);
         const result = await request.query(query);
-    
+
         if (!result.recordset.length) {
             return res.status(404).json({ message: 'No documents found.' });
         }
-    
+
         res.status(200).json({ status: 'success', documents: result.recordset });
     } catch (err) {
         console.error('Error retrieving documents:', err);
@@ -63,16 +63,30 @@ const getAllDocuments = async (req, res) => {
 const getPendingDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
-
-        const userRole = req.user.role; // Update based on how you store user role
-        const userId = req.user.id; // Update based on how you store user ID
+        const userRole = req.user.role; 
+        const userId = req.user.id; 
 
         const query = `
-            SELECT docId, module, description,fileName , author, fileSize, location, university, category, academicYear, userId
+            SELECT 
+                docId, 
+                module, 
+                description,
+                fileName,
+                author,
+                fileSize,
+                location,
+                university,
+                category,
+                academicYear,
+                userId,
+                title, -- Added title
+                preview_image_url, -- Added preview image URL
+                light_preview_url, -- Added light preview URL
+                preview_file_size -- Added preview file size
             FROM DOCUMENT
             WHERE status = 'pending'
         `;
-        
+
         const request = new sql.Request(connection);
         const result = await request.query(query);
 
@@ -87,13 +101,14 @@ const getPendingDocuments = async (req, res) => {
     }
 };
 
+
 // Get reported documents
 const getReportedDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
+        const userRole = req.user.role; 
+        const userId = req.user.id; 
 
-        const userRole = req.user.role; // Update based on how you store user role
-        const userId = req.user.id; // Update based on how you store user ID
         const query = `
             SELECT 
                 d.docId, 
@@ -107,11 +122,15 @@ const getReportedDocuments = async (req, res) => {
                 d.userId AS documentUserId,
                 r.userId AS reporterUserId,
                 r.reporting_details,
-                r.reporting_timestamp
+                r.reporting_timestamp,
+                d.title, -- Added title
+                d.preview_image_url, -- Added preview image URL
+                d.light_preview_url, -- Added light preview URL
+                d.preview_file_size -- Added preview file size
             FROM DOCUMENT d
             INNER JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
         `;
-        
+
         const request = new sql.Request(connection);
         const result = await request.query(query);
 
@@ -127,13 +146,14 @@ const getReportedDocuments = async (req, res) => {
 };
 
 
+
 // Get denied documents
 const getDeniedDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
+        const userRole = req.user.role; 
+        const userId = req.user.id; 
 
-        const userRole = req.user.role; // Update based on how you store user role
-        const userId = req.user.id; // Update based on how you store user ID
         const query = `
             SELECT 
                 d.docId, 
@@ -146,12 +166,16 @@ const getDeniedDocuments = async (req, res) => {
                 d.academicYear, 
                 nd.denial_comments,
                 d.userId AS documentUserId,
-                nd.datetime_of_denial
+                nd.datetime_of_denial,
+                d.title, -- Added title
+                d.preview_image_url, -- Added preview image URL
+                d.light_preview_url, -- Added light preview URL
+                d.preview_file_size -- Added preview file size
             FROM DOCUMENT d
             INNER JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
             WHERE d.status = 'denied'
         `;
-        
+
         const request = new sql.Request(connection);
         const result = await request.query(query);
 
@@ -167,16 +191,13 @@ const getDeniedDocuments = async (req, res) => {
 };
 
 
+
 // Get approved documents
 const getApprovedDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
-
-        // Declare query variable
         let query;
 
-        // Construct the query based on user role
-       
         query = `
             SELECT 
                 d.module, 
@@ -191,21 +212,22 @@ const getApprovedDocuments = async (req, res) => {
                 d.pageCount,
                 d.author,
                 d.creationDate,
-                d.modificationDate
+                d.modificationDate,
+                d.title, -- Added title
+                d.preview_image_url, -- Added preview image URL
+                d.light_preview_url, -- Added light preview URL
+                d.preview_file_size -- Added preview file size
             FROM DOCUMENT d
             WHERE d.status = 'approved'
         `;
-        
-        // Prepare and execute the SQL query
-        const request = new sql.Request(connection);
-        const result = await request.query(query); // Execute the query
 
-        // Check if the result set has records
+        const request = new sql.Request(connection);
+        const result = await request.query(query);
+
         if (!result.recordset.length) {
             return res.status(404).json({ message: 'No approved documents found.' });
         }
 
-        // Respond with the result
         res.status(200).json({ status: 'success', documents: result.recordset });
     } catch (err) {
         console.error('Error retrieving approved documents:', err);
@@ -216,14 +238,14 @@ const getApprovedDocuments = async (req, res) => {
 
 
 
+
 // Get a document by ID
 // Get a document by ID with all related details
 const getDocumentById = async (req, res) => {
     const { id } = req.params;
     try {
         const connection = await connectToDatabase();
-
-        const userRole = req.user.role; // Update based on how you store user role
+        const userRole = req.user.role; 
 
         let query = `
             SELECT 
@@ -247,16 +269,19 @@ const getDocumentById = async (req, res) => {
                 r.reporting_details,
                 r.reporting_timestamp,
                 nd.datetime_of_denial,
-                a.datetime_of_approval
+                a.datetime_of_approval,
+                d.title, -- Added title
+                d.preview_image_url, -- Added preview image URL
+                d.light_preview_url, -- Added light preview URL
+                d.preview_file_size -- Added preview file size
             FROM DOCUMENT d
             LEFT JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
             LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
             LEFT JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
             WHERE d.docId = @docId`
         
-        
         const request = new sql.Request(connection);
-        request.input('docId', sql.Int, id);  // Adjust the type based on your schema, might be sql.Int or sql.VarChar
+        request.input('docId', sql.Int, id);
         const result = await request.query(query);
 
         if (!result.recordset.length) {
@@ -269,6 +294,7 @@ const getDocumentById = async (req, res) => {
         res.status(500).json({ message: 'Failed to retrieve document', error: err.message });
     }
 };
+
 
 const searchDocuments = async (req, res) => {
     const { search } = req.query;
@@ -307,7 +333,12 @@ const searchDocuments = async (req, res) => {
                 r.reporting_details,
                 r.reporting_timestamp,
                 nd.datetime_of_denial,
-                a.datetime_of_approval
+                a.datetime_of_approval,
+                d.title, -- Added title
+                d.preview_image_url, -- Added preview image URL
+                d.light_preview_url, -- Added light preview URL
+                d.preview_file_size -- Added preview file size
+                
             FROM DOCUMENT d
             LEFT JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
             LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
@@ -338,7 +369,11 @@ const searchDocuments = async (req, res) => {
                     d.pageCount,
                     d.author,
                     d.creationDate,
-                    d.modificationDate
+                    d.modificationDate,
+                    d.title, -- Added title
+                    d.preview_image_url, -- Added preview image URL
+                    d.light_preview_url, -- Added light preview URL
+                    d.preview_file_size -- Added preview file size
                 FROM DOCUMENT d
                 LEFT JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
                 LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
