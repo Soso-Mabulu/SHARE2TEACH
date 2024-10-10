@@ -1,15 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { reportFile, denyReport } = require('../controllers/fileReportController');
+const { reportFile, handleRestrictedDocument } = require('../controllers/fileReportController');
 const authorize = require('../middleware/authorize');
 
-
-router.use(authorize(['public','educator', 'moderator', 'admin']));
-
 // Report a file
-router.post('/', reportFile);
+router.post('/', authorize(['public']), reportFile);
 
-// Deny a report
-//router.post('/:id/deny', denyReport);
+// Handle restricted document
+router.post('/restricted-document', authorize(['admin', 'moderator']), handleRestrictedDocument);
 
 module.exports = router;
+
