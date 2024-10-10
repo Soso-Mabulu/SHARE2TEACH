@@ -20,7 +20,7 @@ const validateRating = (rating) => rating >= 0 && rating <= 5;
 
 // Controller to rate a document
 const rateDocument = async (req, res) => {
-    const { docId, rating } = req.body;
+    const { docId, userId, rating } = req.body;
 
     if (!validateRating(rating)) {
         return res.status(400).json({ error: 'Rating must be between 0 and 5' });
@@ -28,7 +28,6 @@ const rateDocument = async (req, res) => {
 
     try {
         const pool = await connect();
-        const userId = req.user.id; // Access userId correctly
         console.log('User ID:', userId); // Log userId
         console.log('Document ID:', docId); // Log docId
 
@@ -59,12 +58,12 @@ const rateDocument = async (req, res) => {
         await pool.request()
             .input('docId', sql.Int, docId)
             .query('MERGE AVERAGE_RATING AS target ' +
-                   'USING (SELECT docId, ROUND(AVG(rating), 2) AS averageRating FROM RATING WHERE docId = @docId GROUP BY docId) AS source ' +
-                   'ON (target.docId = source.docId) ' +
-                   'WHEN MATCHED THEN ' +
-                   'UPDATE SET averageRating = source.averageRating ' +
-                   'WHEN NOT MATCHED THEN ' +
-                   'INSERT (docId, averageRating) VALUES (source.docId, source.averageRating);');
+                'USING (SELECT docId, ROUND(AVG(rating), 2) AS averageRating FROM RATING WHERE docId = @docId GROUP BY docId) AS source ' +
+                'ON (target.docId = source.docId) ' +
+                'WHEN MATCHED THEN ' +
+                'UPDATE SET averageRating = source.averageRating ' +
+                'WHEN NOT MATCHED THEN ' +
+                'INSERT (docId, averageRating) VALUES (source.docId, source.averageRating);');
 
         res.status(200).json({ message: 'Rating added successfully' });
     } catch (err) {
@@ -73,9 +72,10 @@ const rateDocument = async (req, res) => {
     }
 };
 
+
 // Controller to update a rating
 const updateRating = async (req, res) => {
-    const { docId, rating } = req.body;
+    const { docId, userId, rating } = req.body;
 
     if (!validateRating(rating)) {
         return res.status(400).json({ error: 'Rating must be between 0 and 5' });
@@ -83,7 +83,7 @@ const updateRating = async (req, res) => {
 
     try {
         const pool = await connect();
-        const userId = req.user.id; // Access userId correctly
+       
 
         const ratingResult = await pool.request()
             .input('docId', sql.Int, docId)
@@ -119,11 +119,10 @@ const updateRating = async (req, res) => {
 
 // Controller to delete a rating
 const deleteRating = async (req, res) => {
-    const { docId } = req.body;
+    const { docId, userId } = req.body;
 
     try {
         const pool = await connect();
-        const userId = req.user.id; // Access userId correctly
 
         const result = await pool.request()
             .input('docId', sql.Int, docId)
@@ -154,7 +153,7 @@ const deleteRating = async (req, res) => {
                         WHERE docId = @docId;`);
         }
 
-        res.status(204).send("Rating has been deleted successfully"); 
+        res.status(204).send("Rating has been deleted successfully");
     } catch (err) {
         console.error('Database error:', err);
         res.status(500).json({ error: 'An error occurred while deleting the rating' });
