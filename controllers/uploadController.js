@@ -8,6 +8,7 @@ const path = require('path');
 const { PDFDocument } = require('pdf-lib');
 const sharp = require('sharp');
 const { exec } = require('child_process');
+const { v4: uuidv4 } = require('uuid'); // Import uuid
 
 // Function to read the licensing PDF and return it as a buffer
 const readLicensingPDF = async () => {
@@ -157,8 +158,8 @@ const uploadFiles = async (req, res) => {
             .toBuffer();
 
         // Upload the preview image to Azure Blob Storage
-        const timestamp = Date.now();
-        const uniqueFileName = `${timestamp}_${path.basename(previewImagePath)}`;
+        // Generate a unique filename using UUID
+        const uniqueFileName = `${uuidv4()}_${path.basename(previewImagePath)}`;
         const previewImageUrl = await s3Upload({ originalname: uniqueFileName, buffer: optimizedImageBuffer });
         
         // Generate light preview images
@@ -174,7 +175,7 @@ const uploadFiles = async (req, res) => {
                 .png({ quality: 80 })
                 .toBuffer();
 
-            const uniqueLightFileName = `${timestamp}_${path.basename(lightImagePath)}`;
+            const uniqueLightFileName = `${uuidv4()}_${path.basename(lightImagePath)}`; // Use UUID for light images
             const lightPreviewImageUrl = await s3Upload({ originalname: uniqueLightFileName, buffer: optimizedLightImageBuffer });
             console.log(`Uploaded light preview image: ${uniqueLightFileName}, URL: ${lightPreviewImageUrl}`); // Log uploaded URL
             previewImageUrls.push(lightPreviewImageUrl);
