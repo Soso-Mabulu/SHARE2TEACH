@@ -13,6 +13,7 @@ RUN apt-get update && \
         libreoffice-calc \
         libreoffice-impress \
         fonts-dejavu \
+        poppler-utils \  
         build-essential \
         python3 && \
     apt-get clean && \
