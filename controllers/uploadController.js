@@ -41,7 +41,7 @@ const extractFirstPageImage = async (pdfBuffer, outputPath) => {
             if (error) {
                 return reject(error);
             }
-            const imagePath = path.join(outputPath, 'preview-1.png');
+            const imagePath = path.join(outputPath, 'preview-01.png');
             resolve(imagePath);
         });
     });
@@ -56,22 +56,25 @@ const extractThreeImagesFromPdf = async (pdfBuffer, lightoutputPath, pageCount =
         // Use pdftoppm to convert the first three pages to PNG
         exec(`pdftoppm -f 1 -l ${pageCount} -png "${tempPdfPath}" "${lightoutputPath}/preview"`, (error) => {
             if (error) {
+                console.error('Error during PDF to image conversion:', error);
                 return reject(error);
             }
 
             const lightImagePaths = [];
             for (let i = 1; i <= pageCount; i++) {
-                const lightImagePath = path.join(lightoutputPath, `preview-${i}.png`);
+                const lightImagePath = path.join(lightoutputPath, `preview-0${i}.png`);
                 if (fs.existsSync(lightImagePath)) {
                     lightImagePaths.push(lightImagePath);
+                } else {
+                    console.warn(`Expected light preview image does not exist: ${lightImagePath}`);
                 }
             }
 
+            console.log('Generated light preview image paths:', lightImagePaths); // Log generated paths
             resolve(lightImagePaths);
         });
     });
 };
-
 const uploadFiles = async (req, res) => {
     let connection;
     try {
@@ -131,15 +134,17 @@ const uploadFiles = async (req, res) => {
         const mergedPdfBuffer = await mergePDFs(pdfBuffer, licensingBuffer);
 
         // Generate the first page preview image
-        const outputPath = path.join(__dirname, 'temp_images');
+        const outputPath = __dirname + '/temp_images';
         if (!fs.existsSync(outputPath)){
             fs.mkdirSync(outputPath);
+            fs.mkdirSync(outputPath, { recursive: true });
         }
 
         // Generate light preview images
-        const lightoutputPath = path.join(__dirname, 'lighttemp_images');
+        const lightoutputPath = __dirname + '/lighttemp_images';
         if (!fs.existsSync(lightoutputPath)) {
             fs.mkdirSync(lightoutputPath);
+            fs.mkdirSync(lightoutputPath, { recursive: true });
         }
 
         const previewImagePath = await extractFirstPageImage(mergedPdfBuffer, outputPath);
@@ -158,6 +163,7 @@ const uploadFiles = async (req, res) => {
         
         // Generate light preview images
         const previewImagePaths = await extractThreeImagesFromPdf(mergedPdfBuffer, lightoutputPath);
+        console.log('Preview image paths:', previewImagePaths); // Log the image paths before URL generation
         const previewImageUrls = [];
         let totalPreviewImageSize = 0;
 
@@ -170,13 +176,14 @@ const uploadFiles = async (req, res) => {
 
             const uniqueLightFileName = `${timestamp}_${path.basename(lightImagePath)}`;
             const lightPreviewImageUrl = await s3Upload({ originalname: uniqueLightFileName, buffer: optimizedLightImageBuffer });
+            console.log(`Uploaded light preview image: ${uniqueLightFileName}, URL: ${lightPreviewImageUrl}`); // Log uploaded URL
             previewImageUrls.push(lightPreviewImageUrl);
             totalPreviewImageSize += optimizedLightImageBuffer.length; // Track total size of light preview images
         }
 
         // Join the URLs into a comma-separated string
         const previewImageUrlString = previewImageUrls.join(',');
-
+        console.log('Final light preview URL string:', previewImageUrlString); // Log final URL string
         // Calculate total size of preview images for the database
         const previewFileSize = optimizedImageBuffer.length + totalPreviewImageSize;
 
