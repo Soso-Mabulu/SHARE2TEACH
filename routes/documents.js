@@ -24,7 +24,7 @@ router.get('/search',authorize(['educator', 'moderator', 'admin', 'public']), do
 
 
 // Route to get a document by ID
-router.get('/:id', authorize(['moderator', 'admin']), documentController.getDocumentById);
+router.get('/:id', authorize(['moderator', 'admin', 'public']), documentController.getDocumentById);
 
 router.delete('/:docId', authorize(['moderator', 'admin']), documentController.deleteDocument);
 

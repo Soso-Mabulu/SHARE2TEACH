@@ -13,7 +13,7 @@ const router = express.Router();
 router.post('/', rateDocument);
 
 // Route to get all ratings, authorized for admins
-router.get('/', authorize('admin'), getAllRatings);
+router.get('/', getAllRatings);
 
 // Route to update a rating, authorized for users
 router.put('/', updateRating);
