@@ -31,6 +31,21 @@ const mergePDFs = async (mainPdf, licensingPdf) => {
     return await mergedDoc.save();
 };
 
+// Function to check for the existence of the preview image files
+const findPreviewImagePath = (outputPath) => {
+    const possiblePaths = [
+        path.join(outputPath, 'preview-1.png'),
+        path.join(outputPath, 'preview-01.png')
+    ];
+    
+    for (const imagePath of possiblePaths) {
+        if (fs.existsSync(imagePath)) {
+            return imagePath;
+        }
+    }
+    return null;
+};
+
 // Function to extract the first page as an image
 const extractFirstPageImage = async (pdfBuffer, outputPath) => {
     return new Promise((resolve, reject) => {
@@ -42,8 +57,12 @@ const extractFirstPageImage = async (pdfBuffer, outputPath) => {
             if (error) {
                 return reject(error);
             }
-            const imagePath = path.join(outputPath, 'preview-01.png');
-            resolve(imagePath);
+            const imagePath = findPreviewImagePath(outputPath);
+            if (imagePath) {
+                resolve(imagePath);
+            } else {
+                reject(new Error("No preview image found"));
+            }
         });
     });
 };
@@ -63,11 +82,23 @@ const extractThreeImagesFromPdf = async (pdfBuffer, lightoutputPath, pageCount =
 
             const lightImagePaths = [];
             for (let i = 1; i <= pageCount; i++) {
-                const lightImagePath = path.join(lightoutputPath, `preview-0${i}.png`);
-                if (fs.existsSync(lightImagePath)) {
-                    lightImagePaths.push(lightImagePath);
+                const possiblePaths = [
+                    path.join(lightoutputPath, `preview-${i}.png`),
+                    path.join(lightoutputPath, `preview-0${i}.png`)
+                ];
+                let foundPath = null;
+
+                for (const lightImagePath of possiblePaths) {
+                    if (fs.existsSync(lightImagePath)) {
+                        foundPath = lightImagePath;
+                        break;
+                    }
+                }
+
+                if (foundPath) {
+                    lightImagePaths.push(foundPath);
                 } else {
-                    console.warn(`Expected light preview image does not exist: ${lightImagePath}`);
+                    console.warn(`Expected light preview image does not exist: ${possiblePaths.join(', ')}`);
                 }
             }
 
