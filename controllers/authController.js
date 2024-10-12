@@ -142,7 +142,7 @@ const requestPasswordReset = async (req, res) => {
             <p>Dear User,</p>
             <p>You have requested to reset your password for your Share2Teach account. To proceed, please click the button below:</p>
             
-            <a href="http://localhost:5173/reset-password?token=${resetToken}" 
+            <a href="https://share2teach-frontend-dev-494405022119.us-central1.run.app/reset-password?token=${resetToken}" 
                style="display: inline-block; padding: 10px 20px; margin: 20px 0; background-color: #5b4b9a; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold;">
                Reset Password
             </a>
@@ -154,7 +154,7 @@ const requestPasswordReset = async (req, res) => {
             <p style="font-size: 12px; text-align: center; color: #777;">
               &copy; ${new Date().getFullYear()} Share2Teach. All rights reserved.<br />
               Share2Teach, Inc. | 123 Education Lane | Learning City, ST 12345<br />
-              <a href="https://www.share2teach.com/privacy-policy" style="color: #5b4b9a;">Privacy Policy</a> | <a href="https://www.share2teach.com/terms-of-service" style="color: #5b4b9a;">Terms of Service</a>
+              <a href="https://share2teach-frontend-dev-494405022119.us-central1.run.app/privacy-policy" style="color: #5b4b9a;">Privacy Policy</a> | <a href="https://share2teach-frontend-dev-494405022119.us-central1.run.app/terms-of-service" style="color: #5b4b9a;">Terms of Service</a>
             </p>
           </div>
         </div>
