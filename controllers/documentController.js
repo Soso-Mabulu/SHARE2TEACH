@@ -200,7 +200,6 @@ const getApprovedDocuments = async (req, res) => {
 
         query = `
             SELECT 
-                d.docId, 
                 d.module, 
                 d.description, 
                 d.location, 
