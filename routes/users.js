@@ -94,7 +94,7 @@ router.put('/:userId', authorize('admin'), async (req, res) => {
     const { userType } = req.body;
 
     // Validate userType
-    const validUserTypes = ['moderator', 'admin', 'public'];
+    const validUserTypes = ['moderator','educator', 'admin', 'public'];
     if (!validUserTypes.includes(userType)) {
         return res.status(400).json({ message: 'Invalid user type provided' });
     }
