@@ -3,6 +3,7 @@ const sql = require('mssql');
 const getPool = require('../config/db'); // Adjust this path as needed
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
