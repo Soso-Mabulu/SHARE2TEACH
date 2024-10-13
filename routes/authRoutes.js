@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const passport = require('passport');
+const passport = require('passport'); // Already configured in separate file
 const generateToken = require('../utils/jwt');
 
 // Route for user sign-up (registration)
@@ -30,10 +30,10 @@ router.get('/google/callback',
   (req, res) => {
     try {
       // Generate token after successful authentication
-      const token = generateToken(req.user); // Assuming req.user contains user info
+      const token = generateToken(req.user);
 
       // Get user role
-      const userRole = req.user.role; // Adjust this based on how you store user roles
+      const userRole = req.user.role;
 
       // Redirect based on user role
       const baseUrl = 'https://share2teach-frontend-dev-494405022119.us-central1.run.app';
@@ -44,14 +44,19 @@ router.get('/google/callback',
           return res.redirect(`${baseUrl}/educator-dashboard?token=${token}`);
         case 'moderator':
           return res.redirect(`${baseUrl}/moderator-dashboard?token=${token}`);
-        default: // Handle public users and any other roles
+        default:
           return res.redirect(`${baseUrl}/public-user-dashboard?token=${token}`);
       }
     } catch (error) {
-      console.error('Error during Google callback:', error);
-      return res.status(500).redirect('/'); // Redirect to homepage on error
+      console.error('Error during Google callback:', error.message);
+      return res.status(500).redirect('/');
     }
   }
 );
 
 module.exports = router;
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> origin/main
