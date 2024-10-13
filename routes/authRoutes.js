@@ -24,30 +24,35 @@ router.get('/google', passport.authenticate('google', {
   scope: ['profile', 'email']
 }));
 
-
 // Google callback route
-router.get('/google/callback', 
+router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
-    // Generate token after successful authentication
-    const token = generateToken(req.user); // Assuming req.user contains user info
-    console.log("token", token);
+    try {
+      // Generate token after successful authentication
+      const token = generateToken(req.user); // Assuming req.user contains user info
+      console.log("Generated token:", token);
 
-    // Get user role
-    const userRole = req.user.role; // Adjust this based on how you store user roles
+      // Get user role
+      const userRole = req.user.role; // Adjust this based on how you store user roles
 
-    // Redirect based on user role
-    if (userRole === 'admin') {
-      return res.redirect(`https://share2teach-frontend-dev-494405022119.us-central1.run.app/admin-dashboard?token=${token}`);
-    } else if (userRole === 'educator') {
-      return res.redirect(`https://share2teach-frontend-dev-494405022119.us-central1.run.app/educator-dashboard?token=${token}`);
-    } else if (userRole === 'moderator') {
-      return res.redirect(`https://share2teach-frontend-dev-494405022119.us-central1.run.app/moderator-dashboard?token=${token}`);
-    } else {
-      return res.redirect(`https://share2teach-frontend-dev-494405022119.us-central1.run.app/user-dashboard?token=${token}`);
+      // Redirect based on user role
+      const baseUrl = 'https://share2teach-frontend-dev-494405022119.us-central1.run.app';
+      switch (userRole) {
+        case 'admin':
+          return res.redirect(`${baseUrl}/admin-dashboard?token=${token}`);
+        case 'educator':
+          return res.redirect(`${baseUrl}/educator-dashboard?token=${token}`);
+        case 'moderator':
+          return res.redirect(`${baseUrl}/moderator-dashboard?token=${token}`);
+        default: // Handle public users and any other roles
+          return res.redirect(`${baseUrl}/public-user-dashboard?token=${token}`);
+      }
+    } catch (error) {
+      console.error('Error during Google callback:', error);
+      return res.status(500).redirect('/'); // Redirect to homepage on error
     }
   }
 );
-
 
 module.exports = router;
