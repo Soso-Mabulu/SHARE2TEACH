@@ -38,13 +38,13 @@ router.get('/google/callback',
 
     // Redirect based on user role
     if (userRole === 'admin') {
-      return res.redirect(`/admin-dashboard?token=${token}`);
+      return res.redirect(`https://share2teach-frontend-dev-494405022119.us-central1.run.app/admin-dashboard?token=${token}`);
     } else if (userRole === 'educator') {
-      return res.redirect(`/educator-dashboard?token=${token}`);
+      return res.redirect(`https://share2teach-frontend-dev-494405022119.us-central1.run.app/educator-dashboard?token=${token}`);
     } else if (userRole === 'moderator') {
-      return res.redirect(`/moderator-dashboard?token=${token}`);
+      return res.redirect(`https://share2teach-frontend-dev-494405022119.us-central1.run.app/moderator-dashboard?token=${token}`);
     } else {
-      return res.redirect(`/user-dashboard?token=${token}`);
+      return res.redirect(`https://share2teach-frontend-dev-494405022119.us-central1.run.app/user-dashboard?token=${token}`);
     }
   }
 );
