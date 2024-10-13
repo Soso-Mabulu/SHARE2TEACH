@@ -5,8 +5,6 @@ const helmet = require('helmet');
 const dotenv = require('dotenv');
 const setupSwagger = require('./routes/swagger');
 const session = require('express-session');
-//const passport = require('./config/passport-setup');
-const passport = require('./config/passportConfig');
 require('dotenv').config();
 
 // Load environment variables from .env file
@@ -44,9 +42,6 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-// Passport middleware
-app.use(passport.initialize());
-app.use(passport.session());
 
 // API routes
 const apiVersion = 'v1';
