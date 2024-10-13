@@ -24,6 +24,7 @@ router.get('/google', passport.authenticate('google', {
   scope: ['profile', 'email']
 }));
 
+
 // Google callback route
 router.get('/google/callback', 
   passport.authenticate('google', { failureRedirect: '/' }),
@@ -31,13 +32,22 @@ router.get('/google/callback',
     // Generate token after successful authentication
     const token = generateToken(req.user); // Assuming req.user contains user info
     console.log("token", token);
-    
-    // Return the token as JSON response
-    res.json({
-      message: 'Login Successful!',
-      token: token,
-    });
+
+    // Get user role
+    const userRole = req.user.role; // Adjust this based on how you store user roles
+
+    // Redirect based on user role
+    if (userRole === 'admin') {
+      return res.redirect(`/admin-dashboard?token=${token}`);
+    } else if (userRole === 'educator') {
+      return res.redirect(`/educator-dashboard?token=${token}`);
+    } else if (userRole === 'moderator') {
+      return res.redirect(`/moderator-dashboard?token=${token}`);
+    } else {
+      return res.redirect(`/user-dashboard?token=${token}`);
+    }
   }
 );
+
 
 module.exports = router;
