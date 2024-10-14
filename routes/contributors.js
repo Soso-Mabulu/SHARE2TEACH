@@ -8,7 +8,7 @@ const authorize = require('../middleware/authorize');
 router.use(authorize(['admin', 'public', 'moderator', 'educator'])); 
 
 // GET /contributors - Retrieves users who have uploaded documents, their roles, and the count of their documents
-router.get('/', authorize(['admin', 'moderator']), async (req, res) => {
+router.get('/', authorize(['admin', 'moderator', 'public', 'educator']), async (req, res) => {
     let db;
     try {
         db = await connectToDatabase(); // Establish the database connection
