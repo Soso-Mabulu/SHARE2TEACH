@@ -4,7 +4,7 @@ const { reportFile, handleRestrictedDocument } = require('../controllers/fileRep
 const authorize = require('../middleware/authorize');
 
 // Report a file
-router.post('/', authorize(['public']), reportFile);
+router.post('/', authorize(['admin', 'moderator', 'public', 'educator']), reportFile);
 
 // Handle restricted document
 router.post('/restricted-document', authorize(['admin', 'moderator']), handleRestrictedDocument);
