@@ -359,6 +359,7 @@ const searchDocuments = async (req, res) => {
         else{
             query = `
                 SELECT 
+                    d.docId,
                     d.module, 
                     d.description, 
                     d.university, 
@@ -371,21 +372,20 @@ const searchDocuments = async (req, res) => {
                     d.author,
                     d.creationDate,
                     d.modificationDate,
-                    d.title, -- Added title
-                    d.preview_image_url, -- Added preview image URL
-                    d.light_preview_url, -- Added light preview URL
-                    d.preview_file_size -- Added preview file size
+                    d.title,                
+                    d.preview_image_url,    
+                    d.light_preview_url,     
+                    d.preview_file_size      
                 FROM DOCUMENT d
-                LEFT JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
-                LEFT JOIN DENIED_DOCUMENT nd ON d.docId = nd.docId
-                LEFT JOIN APPROVED_DOCUMENT a ON d.docId = a.docId
-                WHERE 
-                    (d.module LIKE @search OR
+                WHERE d.status = 'approved' AND (
+                    d.module LIKE @search OR
                     d.description LIKE @search OR
                     d.university LIKE @search OR
-                    d.author LIKE @search OR
-                    d.fileName LIKE @search)
-                AND d.status = 'approved'
+                    d.category LIKE @search OR
+                    d.academicYear LIKE @search OR
+                    d.title LIKE @search
+                );
+
             `;
         } 
 
