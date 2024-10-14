@@ -72,34 +72,6 @@ const rateDocument = async (req, res) => {
     }
 };
 
-const getAllAverageRating = async (req, res) => {
-    const docId = req.params.docId; 
-
-    if (!docId) {
-        return res.status(400).json({ message: 'Document ID is required' });
-    }
-
-    try {
-        const pool = await connect();
-        console.log('Document ID:', docId); // Log the document ID
-
-        const result = await pool.request()
-            .input('docId',sql.Int, docId)
-            .query('SELECT averageRating FROM AVERAGE_RATING WHERE docId = @docId');
-
-        console.log('Query result:', result.recordset); // Log the query result
-
-        if (result.recordset.length === 0) {
-            return res.status(404).json({ message: 'No average rating found for this document' });
-        }
-
-        res.json(result.recordset); // Return the found average rating
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).json({ error: 'An error occurred while fetching ratings' });
-    }
-}
-
 
 // Controller to update a rating
 const updateRating = async (req, res) => {
@@ -192,6 +164,5 @@ module.exports = {
     rateDocument,
     updateRating,
     deleteRating,
-    getAllRatings,
-    getAllAverageRating
+    getAllRatings
 };

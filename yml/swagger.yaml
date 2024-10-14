@@ -1062,67 +1062,6 @@ paths:
                     type: string
                     example: "Database error: Unable to update rating."
 
-  /api/v1/ratings/average/{docId}:
-    get:
-      summary: Get Average Rating for a Document
-      description: Fetches the average rating for a specific document using its ID.
-      tags:
-        - File Rating  # Ensure this matches the tag defined above
-      security:
-        - BearerAuth: []  # Apply the security scheme to the endpoint
-      parameters:
-        - name: docId
-          in: path
-          description: ID of the document to retrieve the average rating for
-          required: true
-          schema:
-            type: integer  # Change to "string" if your ID is a string
-      responses:
-        '200':
-          description: Average rating retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  averageRating:
-                    type: number
-                    format: float
-                    description: The average rating for the document
-        '404':
-          description: No average rating found for this document
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message: 
-                  type: string
-                  example: No average rating found for this document
-                    
-        '400':
-          description: Invalid Document ID provided
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message: 
-                  type: string
-                  example: Invalid Document ID provided
-                    
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error: 
-                  type: string
-                  example: Internal server error
-                    
-
   /api/v1/moderation:
     post:
       summary: Moderate a document

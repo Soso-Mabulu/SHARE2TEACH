@@ -3,26 +3,22 @@ const authorize = require('../middleware/authorize');
 const {
     rateDocument,
     getAllRatings,
-    getAllAverageRating,
     updateRating,
     deleteRating,
 } = require('../controllers/fileRatingController');
 
 const router = express.Router();
 
-// Route to rate a document
+// Route to rate a document, authorized for users
 router.post('/', rateDocument);
 
 // Route to get all ratings, authorized for admins
 router.get('/', getAllRatings);
 
-// Route to get all average ratings
-router.get('/average/:docId', getAllAverageRating);
-
-// Route to update a rating
+// Route to update a rating, authorized for users
 router.put('/', updateRating);
 
-// Route to delete a rating
+// Route to delete a rating, authorized for users
 router.delete('/', deleteRating);
 
 module.exports = router;
