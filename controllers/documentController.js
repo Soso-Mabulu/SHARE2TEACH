@@ -102,13 +102,14 @@ const getPendingDocuments = async (req, res) => {
 };
 
 
-// Get reported documents
+// Get reported documents with "reported" status
 const getReportedDocuments = async (req, res) => {
     try {
         const connection = await connectToDatabase();
         const userRole = req.user.role; 
         const userId = req.user.id; 
 
+        // Modified query to include the condition that documents must have a "reported" status
         const query = `
             SELECT 
                 d.docId, 
@@ -129,6 +130,7 @@ const getReportedDocuments = async (req, res) => {
                 d.preview_file_size -- Added preview file size
             FROM DOCUMENT d
             INNER JOIN DOCUMENT_REPORTING r ON d.docId = r.docId
+            WHERE d.status = 'reported'  -- Only include documents with reported status
         `;
 
         const request = new sql.Request(connection);
@@ -144,6 +146,7 @@ const getReportedDocuments = async (req, res) => {
         res.status(500).json({ message: 'Failed to retrieve reported documents', error: err.message });
     }
 };
+
 
 
 
