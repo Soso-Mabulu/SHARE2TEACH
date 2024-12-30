@@ -4,7 +4,13 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Allows manual trigger of the production deployment workflow
+  workflow_dispatch:
+
+env:
+  DEV_URL: share2teach-api.run.app    # Replace with your actual development domain
+  PROD_URL: api.share2teach.com       # Replace with your actual production domain
+  REGION: us-central1
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
 jobs:
   build:
@@ -68,11 +74,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install Google Cloud SDK
-        run: |
-          sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
-          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-          sudo apt-get update && sudo apt-get install -y google-cloud-sdk
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
@@ -80,26 +84,30 @@ jobs:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Deploy to Google Cloud Run (Development)
+        id: deploy-dev
         run: |
           gcloud run deploy share2teach-backend-dev \
           --image docker.io/sosokwani/share2teach-backend:latest \
           --platform managed \
-          --region us-central1 \
+          --region ${{ env.REGION }} \
           --allow-unauthenticated \
-          --project ${{ secrets.GCP_PROJECT_ID }} \
+          --project ${{ env.PROJECT_ID }} \
           --set-env-vars "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }},AZURE_CONTAINER_NAME=${{ secrets.AZURE_CONTAINER_NAME }},DB_HOST=${{ secrets.DB_HOST }},DB_USER=${{ secrets.DB_USER }},DB_PASSWORD=${{ secrets.DB_PASSWORD }},DB_NAME=${{ secrets.DB_NAME }},JWT_SECRET=${{ secrets.JWT_SECRET }},EMAIL_USER=${{ secrets.EMAIL_USER }},EMAIL_PASS=${{ secrets.EMAIL_PASS }},GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }},GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }},SESSION_SECRET=${{ secrets.SESSION_SECRET }}"
 
-      - name: Output the Development URL
+      - name: Output Development Information
         run: |
-          echo "Development URL: $(gcloud run services describe share2teach-backend-dev --platform managed --region us-central1 --format 'value(status.url)')"
+          echo "::notice title=Development Deployment::🚀 Deployment successful!"
+          echo "::notice::📱 API is now available at: https://${{ env.DEV_URL }}"
+          echo "::notice::🔍 Swagger docs: https://${{ env.DEV_URL }}/api-docs"
 
   approve-deployment:
     needs: deploy-development
     runs-on: ubuntu-latest
     steps:
-      - name: Approval
+      - name: Approval Notice
         run: |
-          echo "Deployment to production requires manual approval. Trigger the production deployment workflow manually."
+          echo "::notice title=Production Approval Required::⚠️ Deployment to production requires manual approval"
+          echo "::notice::👉 Trigger the production deployment workflow manually when ready"
 
   deploy-production:
     runs-on: ubuntu-latest
@@ -107,11 +115,9 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Install Google Cloud SDK
-        run: |
-          sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg
-          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
-          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-          sudo apt-get update && sudo apt-get install -y google-cloud-sdk
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
@@ -119,15 +125,18 @@ jobs:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Deploy to Google Cloud Run (Production)
+        id: deploy-prod
         run: |
           gcloud run deploy share2teach-backend-prod \
           --image docker.io/sosokwani/share2teach-backend:latest \
           --platform managed \
-          --region us-central1 \
+          --region ${{ env.REGION }} \
           --allow-unauthenticated \
-          --project ${{ secrets.GCP_PROJECT_ID }} \
+          --project ${{ env.PROJECT_ID }} \
           --set-env-vars "AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }},AZURE_CONTAINER_NAME=${{ secrets.AZURE_CONTAINER_NAME }},DB_HOST=${{ secrets.DB_HOST }},DB_USER=${{ secrets.DB_USER }},DB_PASSWORD=${{ secrets.DB_PASSWORD }},DB_NAME=${{ secrets.DB_NAME }},JWT_SECRET=${{ secrets.JWT_SECRET }},EMAIL_USER=${{ secrets.EMAIL_USER }},EMAIL_PASS=${{ secrets.EMAIL_PASS }},GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }},GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }},SESSION_SECRET=${{ secrets.SESSION_SECRET }}"
 
-      - name: Output the Production URL
+      - name: Output Production Information
         run: |
-          echo "Production URL: $(gcloud run services describe share2teach-backend-prod --platform managed --region us-central1 --format 'value(status.url)')"
+          echo "::notice title=Production Deployment::🚀 Deployment successful!"
+          echo "::notice::🌐 Production API is now live at: https://${{ env.PROD_URL }}"
+          echo "::notice::📚 API Documentation: https://${{ env.PROD_URL }}/api-docs"
